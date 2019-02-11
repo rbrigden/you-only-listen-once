@@ -18,11 +18,9 @@ class SpeakerClassifierTrainer:
                  num_speakers=1000):
         self.model = models.SpeakerClassifier2d(num_speakers).cuda()
         self.batch_size = batch_size
-        self.optimizer = optim.SGD(self.model.parameters(),
+        self.optimizer = optim.Adam(self.model.parameters(),
                                     lr=learning_rate,
-                                    weight_decay=5e-4,
-                                    momentum=0.9)
-        self.lr_schedule = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, [25000, 50000, 150000], gamma=0.3)
+                                    weight_decay=5e-4)
 
 
     def resume(self, checkpoint_path):
@@ -51,20 +49,25 @@ class SpeakerClassifierTrainer:
             loss = F.nll_loss(preds, label_batch.cuda())
             loss.backward()
             self.optimizer.step()
-            self.lr_schedule.step()
+            # self.lr_schedule.step()
             yield loss.item()
 
     def validation(self, data_loader):
+        self.model.eval()
         num_correct = 0
         for idx, (data_batch, label_batch) in enumerate(data_loader):
             seq_batch, seq_lens = self._process_data_batch(data_batch)
             preds, _ = self.model([seq_batch, seq_lens])
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             num_correct += correct.item()
+        self.model.train()
         return 1.0 - (num_correct / float(len(data_loader.dataset)))
 
     def compute_verification_eer(self, validator):
-        return validator.evaluate(self.model)
+        self.model.eval() 
+        eer = validator.evaluate(self.model)
+        self.model.train()
+        return eer
 
             
             
