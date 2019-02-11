@@ -26,10 +26,11 @@ class VerificationEvaluator:
 
     def evaluate(self, model):
         batch_size = 20
+        collate_fn = voxceleb.voxceleb_clip_and_sample_veri_collate(500)
         enrol_loader = DataLoader(self.enrol_set, shuffle=False, num_workers=8, batch_size=batch_size,
-                                  collate_fn=voxceleb.voxceleb_veri_collate)
+                                  collate_fn=collate_fn)
         test_loader = DataLoader(self.test_set, shuffle=False, num_workers=8, batch_size=batch_size,
-                                 collate_fn=voxceleb.voxceleb_veri_collate)
+                                 collate_fn=collate_fn)
 
         embedding_size = model.embedding_size
         enrol_embeddings = torch.zeros((len(self.enrol_set), embedding_size)).cuda()
@@ -53,7 +54,7 @@ class VerificationEvaluator:
 
         scores = []
         for enrol_idx, test_idx in zip(self.enrol_set.sample_idxs, self.test_set.sample_idxs):
-            score = F.cosine_similarity(enrol_embeddings[enrol_idx].unsqueeze(0), test_embeddings[test_idx].unsqueeze(0), dim=1)
+            score = - torch.dist(enrol_embeddings[enrol_idx].unsqueeze(0), test_embeddings[test_idx].unsqueeze(0), p=2)
             scores.append(score.item())
 
         return eer.EER(self.labels, scores)[0]

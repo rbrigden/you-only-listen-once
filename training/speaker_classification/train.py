@@ -49,8 +49,8 @@ class SpeakerClassifierTrainer:
             loss = F.nll_loss(preds, label_batch.cuda())
             loss.backward()
             self.optimizer.step()
-            # self.lr_schedule.step()
-            yield loss.item()
+            correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
+            yield loss.item(), correct.item()
 
     def validation(self, data_loader):
         self.model.eval()
