@@ -93,11 +93,26 @@ class VoxcelebID(Dataset):
         return dset1, dset2
 
 
-def voxceleb_collate(batch):
+def voxceleb_collate(batch, clip_to=None):
     data = [item[0].permute(1, 0) for item in batch]
     target = [item[1] for item in batch]
     target = torch.LongTensor(target)
     return [data, target]
+
+def voxceleb_clip_and_sample_collate(max_size):
+    """ If len(utterance) > max_size, sample a max_size segment """
+    def _collate_fn(batch):
+        data = []
+        for x in batch:
+            x = x[0].permute(1, 0)
+            if len(x) > max_size:
+                start_idx = np.random.randint(0, len(x)-max_size)
+                x = x[start_idx:start_idx+max_size]
+            data.append(x)
+        target = [item[1] for item in batch]
+        target = torch.LongTensor(target)
+        return [data, target]
+    return _collate_fn
 
 
 def parse_verification_file(veri_file_path, processed_root):
@@ -146,20 +161,34 @@ def voxceleb_veri_collate(batch):
     utterances = [item[0].permute(1, 0) for item in batch]
     return [utterances]
 
+def voxceleb_clip_and_sample_veri_collate(max_size):
+    def _collate_fn(batch):
+        data = []
+        for x in batch:
+            x = x[0].permute(1, 0)
+            if len(x) > max_size:
+                start_idx = np.random.randint(0, len(x)-max_size)
+                x = x[start_idx:start_idx+max_size]
+            data.append(x)
+        return [data]
+    return _collate_fn
+
 
 if __name__ == "__main__":
     # Only load from first 10 speakers
     # speakers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    # dset = VoxcelebID("/home/rbrigden/voxceleb/processed", speakers, preload=False)
-    # loader = DataLoader(dset, batch_size=32, shuffle=True, num_workers=8, collate_fn=voxceleb_collate)
-    #
-    #
-    # for idx, (utterance_batch, label_batch) in enumerate(loader):
-    #     print("Batch: {}".format(idx))
-    #     for u in utterance_batch:
-    #         print(u.shape)
-    #     print()
+    speakers = list(range(1200))
+    dset, _ = VoxcelebID.create_split("/home/rbrigden/voxceleb/processed1", speakers, split=0.99)
+    loader = DataLoader(dset, batch_size=128, shuffle=True, num_workers=16, collate_fn=voxceleb_collate)
 
-    enrol, test, labels = parse_verification_file("data/voxceleb/veri_test.txt",
-                                                  "/home/rbrigden/voxceleb/test/processed")
+    ulens = []
+    for idx, (utterance_batch, label_batch) in enumerate(loader):
+        # print("Batch: {}".format(idx))
+        for u in utterance_batch:
+            ulens.append(u.shape[0])
+
+    print(np.mean(ulens), np.max(ulens), np.min(ulens), np.std(ulens))
+    #
+    # enrol, test, labels = parse_verification_file("data/voxceleb/veri_test.txt",
+    #                                               "/home/rbrigden/voxceleb/test/processed")
     print()
