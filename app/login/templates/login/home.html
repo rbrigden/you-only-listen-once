@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title> YOLO </title>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+          $(document).ready(function() {
+	          setTimeout(function(){
+	              $('body').addClass('loaded');
+	          }, 3000);
+
+	      });
+	  </script>
+
+    <link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
+  </head> 
+  <body>
+    <div id = "buttabs">
+      <button id = "loginbut" type = "submit"> Login </button>
+      <button id = "signupbut" type = "submit"> Submit </button> 
+    </div>
+    <div id = "info">
+      <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
+      <p id = "randphrase"> PlaceHolder </p>
+      <div id = "recbuts">
+        <button id = "startrec" type = "submit"> Start Recording </button>
+        <button id = "stoprec" type = "submit"> Stop Recording </button> 
+      </div>
+    </div>
+    <input type="file" accept="audio/*" capture id="recorder">
+    <audio id="player" controls></audio>
+    <script>
+      var recorder = document.getElementById('recorder');
+      var player = document.getElementById('player');
+
+      recorder.addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        // Do something with the audio file.
+        player.src =  URL.createObjectURL(file);
+      });
+    </script>
+  </body>
+</html>
