@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence
 import training.speaker_classification.model as models
-import torch.optim.lr_scheduler
 
 import torch.optim as optim
 import numpy as np
@@ -18,12 +17,9 @@ class SpeakerClassifierTrainer:
                  num_speakers=1000):
         self.model = models.SpeakerClassifier2d(num_speakers).cuda()
         self.batch_size = batch_size
-        self.optimizer = optim.SGD(self.model.parameters(),
+        self.optimizer = optim.Adam(self.model.parameters(),
                                     lr=learning_rate,
-                                    weight_decay=5e-4,
-                                    momentum=0.9)
-        self.lr_schedule = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, [25000, 50000, 150000], gamma=0.3)
-
+                                    weight_decay=5e-4)
 
     def resume(self, checkpoint_path):
         cpd = torch.load(checkpoint_path, map_location=lambda storage, loc: storage)
@@ -51,7 +47,6 @@ class SpeakerClassifierTrainer:
             loss = F.nll_loss(preds, label_batch.cuda())
             loss.backward()
             self.optimizer.step()
-            self.lr_schedule.step()
             yield loss.item()
 
     def validation(self, data_loader):
@@ -66,6 +61,6 @@ class SpeakerClassifierTrainer:
     def compute_verification_eer(self, validator):
         return validator.evaluate(self.model)
 
-            
-            
+
+
 

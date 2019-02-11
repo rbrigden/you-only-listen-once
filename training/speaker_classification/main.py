@@ -21,7 +21,7 @@ def train_speaker_classifier(args):
 
     train_set, val_set = voxceleb.VoxcelebID.create_split(args.voxceleb_path, speakers, split=0.8, shuffle=True)
 
-    train_loader = dutils.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, collate_fn=voxceleb.voxceleb_collate, num_workers=8)
+    train_loader = dutils.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, collate_fn=voxceleb.voxceleb_collate, num_workers=16)
     val_loader = dutils.DataLoader(val_set, batch_size=args.batch_size, shuffle=False, collate_fn=voxceleb.voxceleb_collate, num_workers=8)
 
     # Verification EER computation
