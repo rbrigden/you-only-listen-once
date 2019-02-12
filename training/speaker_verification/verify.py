@@ -26,11 +26,10 @@ class VerificationEvaluator:
 
     def evaluate(self, model):
         batch_size = 20
-        collate_fn = voxceleb.voxceleb_clip_and_sample_veri_collate(500)
         enrol_loader = DataLoader(self.enrol_set, shuffle=False, num_workers=8, batch_size=batch_size,
-                                  collate_fn=collate_fn)
+                                  collate_fn=voxceleb.voxceleb_veri_collate)
         test_loader = DataLoader(self.test_set, shuffle=False, num_workers=8, batch_size=batch_size,
-                                 collate_fn=collate_fn)
+                                 collate_fn=voxceleb.voxceleb_veri_collate)
 
         embedding_size = model.embedding_size
         enrol_embeddings = torch.zeros((len(self.enrol_set), embedding_size)).cuda()
