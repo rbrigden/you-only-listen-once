@@ -26,18 +26,18 @@ class SpeakerClassifier2d(nn.Module):
         super(SpeakerClassifier2d, self).__init__()
         self.relu = nn.ReLU()
         self.net = nn.Sequential(
-            nn.Conv2d(1, 4, kernel_size=3, stride=(2, 1), bias=False),
+            nn.Conv2d(1, 4, kernel_size=3, stride=(2, 2), bias=False),
             nn.BatchNorm2d(4),
             nn.ELU(),
-            nn.Conv2d(4, 16, kernel_size=3, stride=(2, 1), padding=(0, 1), bias=False),
+            nn.Conv2d(4, 16, kernel_size=3, stride=(1, 1), padding=(1, 1), bias=False),
             nn.BatchNorm2d(16),
             nn.ELU(),
             BasicBlock(16, 16),
-            nn.Conv2d(16, 64, kernel_size=3, stride=(2, 1), bias=False),
+            nn.Conv2d(16, 64, kernel_size=3, stride=(2, 2), bias=False),
             nn.BatchNorm2d(64),
             nn.ELU(),
             BasicBlock(64, 64),
-            nn.Conv2d(64, 256, kernel_size=3, stride=(2, 1), padding=(0, 1), bias=False),
+            nn.Conv2d(64, 256, kernel_size=3, stride=(1, 1), padding=(1, 1), bias=False),
             nn.BatchNorm2d(256),
             nn.ELU(),
             nn.Conv2d(256, 128, kernel_size=3, stride=(2, 2), bias=True),
@@ -53,8 +53,8 @@ class SpeakerClassifier2d(nn.Module):
         shape = list(shape)
         mask = torch.zeros(shape).cuda()
         for i, l in enumerate(seq_lens):
-            new_length = l // 32
-            mask[i, :new_length, :] = 1
+            new_length = l //8
+            mask[i, :, :new_length, :] = 1
         return mask
 
     def forward(self, xs, em=False):
@@ -64,7 +64,7 @@ class SpeakerClassifier2d(nn.Module):
         out *= mask
         out = self.pool(out)
         e = self.embedding(out)
-        e = F.relu(self.ln(e))
+        e = self.ln(F.relu(e))
         if em:
             return e
         c = self.classification(e)

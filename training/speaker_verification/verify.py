@@ -53,7 +53,7 @@ class VerificationEvaluator:
 
         scores = []
         for enrol_idx, test_idx in zip(self.enrol_set.sample_idxs, self.test_set.sample_idxs):
-            score = F.cosine_similarity(enrol_embeddings[enrol_idx].unsqueeze(0), test_embeddings[test_idx].unsqueeze(0), dim=1)
+            score = - torch.dist(enrol_embeddings[enrol_idx].unsqueeze(0), test_embeddings[test_idx].unsqueeze(0), p=2)
             scores.append(score.item())
 
         return eer.EER(self.labels, scores)[0]
