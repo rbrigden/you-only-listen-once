@@ -38,7 +38,7 @@ body{
 	background-color: #2E64FE;
 	color: white;
 	width: 540px;
-	height: 600px;
+	height: 450px;
 	text-align: center;
 	margin-left: 450px;
 	font-size: 15pt;
@@ -55,6 +55,10 @@ body{
 	color: black;
 	border-color: black;
 	border-width: 5pt;
+}
+
+#recordings{
+    text-align: center;
 }
 
 #startrec{
