@@ -9,6 +9,8 @@ import os
 from torch.nn.utils.rnn import pad_sequence
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
 from collections import defaultdict
@@ -81,14 +83,14 @@ class SpeakerEmbedInference:
 
 
 def transform(embeddings):
-    pca = PCA(n_components=50)
-    reduced_embeddings = pca.fit_transform(embeddings)
+    #pca = PCA(n_components=10)
+    #reduced_embeddings = pca.fit_transform(embeddings)
     tsne = TSNE(n_components=2)
-    output = tsne.fit_transform(reduced_embeddings)
+    output = tsne.fit_transform(embeddings)
     return output
 
 def plot_embeddings(embeddings, labels):
-
+    print(embeddings.shape)
     embeddings2d = transform(embeddings)
     data_points = defaultdict(list)
 
@@ -105,7 +107,7 @@ def plot_embeddings(embeddings, labels):
 
         colors.append(classes[name])
 
-    x, y = embeddings2d[:, 0].reshape(-1), embeddings2d[:, 1].reshaphe(-1)
+    x, y = embeddings2d[:, 0].reshape(-1), embeddings2d[:, 1].reshape(-1)
     plt.scatter(x, y, c=np.array(colors))
 
 
@@ -126,13 +128,15 @@ if __name__ == '__main__':
 
     dset = WavDataset(source_path)
 
-    loader = data.DataLoader(dset, shuffle=False, batch_size=1, collate_fn=collate)
+    loader = data.DataLoader(dset, shuffle=False, batch_size=5, collate_fn=collate)
 
     embeddings = []
-    for utterances, labels in loader:
-        embedding_batch = inference.forward(utterances)
+    labels = []
+    for utterance_batch, label_batch in loader:
+        embedding_batch = inference.forward(utterance_batch)
         embeddings.append(embedding_batch)
+        labels += label_batch
     embeddings = torch.cat(embeddings)
 
     plot_embeddings(embeddings.numpy(), labels)
-    plt.show()
+    plt.savefig("fig.png")
