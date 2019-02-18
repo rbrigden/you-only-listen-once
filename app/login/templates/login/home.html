@@ -27,21 +27,74 @@
       <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
       <p id = "randphrase"> PlaceHolder </p>
       <div id = "recbuts">
-        <button id = "startrec" type = "submit"> Start Recording </button>
-        <button id = "stoprec" type = "submit"> Stop Recording </button> 
+        <button id = "startrec" class = "record"> Start Recording </button>
+        <button id = "stoprec" class = "stop"> Stop Recording </button> 
       </div>
     </div>
-    <input type="file" accept="audio/*" capture id="recorder">
-    <audio id="player" controls></audio>
-    <script>
-      var recorder = document.getElementById('recorder');
-      var player = document.getElementById('player');
+    <div id = "recordings">
+      <ol id="recordingsList"></ol>
+    </div>
+    <script> 
 
-      recorder.addEventListener('change', function(e) {
-        var file = e.target.files[0];
-        // Do something with the audio file.
-        player.src =  URL.createObjectURL(file);
-      });
+      /*Code for recording from microphone reference: https://addpipe.com/blog/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/ */
+
+      URL = window.URL || window.webkitURL;
+
+      var gumStream;            
+      var rec;              
+      var input;            
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      var audioContext 
+      var recordButton = document.getElementById("startrec");
+      var stopButton = document.getElementById("stoprec");
+      recordButton.addEventListener("click", startRecording);
+      stopButton.addEventListener("click", stopRecording);
+      function startRecording() {
+        console.log("recordButton clicked");
+        var constraints = { audio: true, video:false }
+        recordButton.disabled = true;
+        stopButton.disabled = false;
+        navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+          console.log("getUserMedia() success, stream created, initializing Recorder.js ...");
+          audioContext = new AudioContext();
+          gumStream = stream;
+          input = audioContext.createMediaStreamSource(stream);
+          rec = new Recorder(input,{numChannels:1})
+          rec.record()
+          console.log("Recording started");
+        }).catch(function(err) {
+            recordButton.disabled = false;
+            stopButton.disabled = true;
+        });
+      }
+
+      function stopRecording() {
+        console.log("stopButton clicked");
+        stopButton.disabled = true;
+        recordButton.disabled = false;
+        rec.stop();
+        gumStream.getAudioTracks()[0].stop();
+        rec.exportWAV(createDownloadLink);
+      }
+
+      function createDownloadLink(blob) {
+        var url = URL.createObjectURL(blob);
+        var au = document.createElement('audio');
+        var li = document.createElement('li');
+        var link = document.createElement('a');
+        var filename = new Date().toISOString();
+        au.controls = true;
+        au.src = url;
+        link.href = url;
+        link.download = filename+".wav"; 
+        link.innerHTML = "Save to disk";
+        li.appendChild(au);
+        li.appendChild(document.createTextNode(filename+".wav "))
+        li.appendChild(link);
+        li.appendChild(document.createTextNode (" "))
+        recordingsList.appendChild(li);
+      }
     </script>
+    <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script> <!-- Matt Damon's recorder.js module-->
   </body>
 </html>
