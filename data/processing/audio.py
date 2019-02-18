@@ -1,66 +1,51 @@
-import os
+import torch
+import torch.nn as nn
 import numpy as np
-import librosa
-import librosa.display
+import training.speaker_classification.model as models
+import torch.utils.data as data
 import argparse
-import time
+import librosa
+import os
+from torch.nn.utils.rnn import pad_sequence
 import ray
 
-
 @ray.remote
-def process_with_mfcc(wav_path, out_path):
-    y, sr = librosa.load(wav_path)
-    mfcc = librosa.feature.mfcc(y=y, sr=sr, dct_type=2, n_mfcc=64, norm='ortho')
-    np.save(out_path, mfcc)
-
-@ray.remote
-def process_with_mel(wav_path, out_path):
-    # TODO: Standardize sr across dataset
+def process_with_mel(wav_path):
     y, sr = librosa.load(wav_path)
     mel = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=2048, n_mels=64)
     assert mel.shape[0] == 64
-    np.save(out_path, mel)
+    return mel.T
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--source", type=str,
-                        default='/home/rbrigden/voxceleb/wav')
-    parser.add_argument("--dest", type=str,
-                        default='/home/rbrigden/voxceleb/processed')
-    parser.add_argument("--mode", type=str,
-                        default="mfcc")
-    args = parser.parse_args()
+class WavDataset(data.Dataset):
 
-    source_path = args.source
-    dest_path = args.dest
+    def __init__(self, file_paths, get_label=None):
+        super(WavDataset, self).__init__()
 
-    ray.init()
+        if get_label is None:
+            get_label = lambda x: x
 
-    if not os.path.exists(source_path):
-        raise ValueError("Source path is invalid")
+        utterances = []
+        labels = []
+        for wav_path in file_paths:
+            utterances.append(process_with_mel.remote(wav_path))
+            labels.append(get_label(wav_path))
 
-    if not os.path.exists(dest_path):
-        raise ValueError("Dest path is invalid")
+        self.utterances = ray.get(utterances)
+        self.labels = labels
 
-    start = time.time()
-    object_ids = []
-    for root, _, filenames in os.walk(source_path):
-        for filename in filenames:
-            wav_file_path = os.path.join(root, filename)
-            out_name = os.path.splitext(filename)[0]
-            base_name = root.split("/")[-2:]
-            out_path = os.path.join(*([dest_path]+base_name+[out_name]))
-            
-            if args.mode == "mfcc":
-                task = process_with_mfcc.remote(wav_file_path, out_path)
-            elif args.mode == "mel":
-                task = process_with_mel.remote(wav_file_path, out_path)
-            else:
-                raise ValueError("Must specify valid mode")
-            object_ids.append(task)
+    def normalize(self, mean, std):
+        mean, variance = mean, std
+        norm_ = lambda u: (u - mean.reshape(1, -1)) / (std.reshape(1, -1))
+        self.utterances = [norm_(u) for u in self.utterances]
 
-    ray.wait(object_ids, num_returns=len(object_ids))
-    end = time.time()
+    def __len__(self):
+        return len(self.utterances)
 
-    print("Finished in {} secs".format(end - start))
+    def __getitem__(self, item):
+        return [torch.FloatTensor(self.utterances[item]), self.labels[item]]
+
+
+
+
+
