@@ -7,7 +7,11 @@ import argparse
 import librosa
 import os
 from torch.nn.utils.rnn import pad_sequence
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 
+from collections import defaultdict
 
 class WavDataset(data.Dataset):
 
@@ -62,7 +66,7 @@ class SpeakerEmbedInference:
         # pad the sequences, each seq must be (L, *)
         seq_lens = [len(x) for x in data_batch]
         seq_batch = pad_sequence(data_batch, batch_first=True)
-        return seq_batch.unsqueeze(1).cuda(), seq_lens
+        return seq_batch.unsqueeze(1), seq_lens
 
     def forward(self, x):
         self.model.eval()
@@ -76,8 +80,34 @@ class SpeakerEmbedInference:
         self.model.load_state_dict(cpd["model"])
 
 
+def transform(embeddings):
+    pca = PCA(n_components=50)
+    reduced_embeddings = pca.fit_transform(embeddings)
+    tsne = TSNE(n_components=2)
+    output = tsne.fit_transform(reduced_embeddings)
+    return output
+
 def plot_embeddings(embeddings, labels):
-    raise NotImplementedError
+
+    embeddings2d = transform(embeddings)
+    data_points = defaultdict(list)
+
+    classes = dict()
+    colors = []
+    c = 0
+    for l in labels:
+        name, num = l.split('_')
+        num = int(num)
+
+        if name not in classes:
+            classes[name] = c
+            c += 1
+
+        colors.append(classes[name])
+
+    x, y = embeddings2d[:, 0].reshape(-1), embeddings2d[:, 1].reshaphe(-1)
+    plt.scatter(x, y, c=np.array(colors))
+
 
 
 if __name__ == '__main__':
@@ -98,7 +128,11 @@ if __name__ == '__main__':
 
     loader = data.DataLoader(dset, shuffle=False, batch_size=1, collate_fn=collate)
 
+    embeddings = []
     for utterances, labels in loader:
-        embeddings = inference.forward(utterances)
+        embedding_batch = inference.forward(utterances)
+        embeddings.append(embedding_batch)
+    embeddings = torch.cat(embeddings)
 
-        plot_embeddings(embeddings.numpy(), labels)
+    plot_embeddings(embeddings.numpy(), labels)
+    plt.show()
