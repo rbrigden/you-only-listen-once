@@ -119,12 +119,17 @@ if __name__ == '__main__':
                         default='/tmp/demo_utterances',
                         help='directory with wavs')
 
+    parser.add_argument("--param-path", type=str,
+                        default='models/speaker_classification/simple_v2.pt',
+                        help='directory with wavs')
+
     args = parser.parse_args()
     source_path = args.source
 
     model = models.SpeakerClassifier2d(1200)
 
     inference = SpeakerEmbedInference(model)
+    inference.load_params(args.param_path)
 
     dset = WavDataset(source_path)
 
