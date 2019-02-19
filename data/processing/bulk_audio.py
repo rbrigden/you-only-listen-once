@@ -30,8 +30,7 @@ if __name__ == "__main__":
                         default='/home/rbrigden/voxceleb/processed')
     parser.add_argument("--mode", type=str,
                         default="mfcc")
-    parser.add_argument("--sample_rate", type=str,
-			default="22050")
+    parser.add_argument("--sample_rate", type=int, default=22050)
     
     args = parser.parse_args()
 
@@ -56,9 +55,9 @@ if __name__ == "__main__":
             out_path = os.path.join(*([dest_path]+base_name+[out_name]))
             
             if args.mode == "mfcc":
-                task = process_with_mfcc.remote(wav_file_path, out_path, int(sample_rate))
+                task = process_with_mfcc.remote(wav_file_path, out_path, args.sample_rate)
             elif args.mode == "mel":
-                task = process_with_mel.remote(wav_file_path, out_path, int(sample_rate))
+                task = process_with_mel.remote(wav_file_path, out_path, args.sample_rate)
             else:
                 raise ValueError("Must specify valid mode")
             object_ids.append(task)

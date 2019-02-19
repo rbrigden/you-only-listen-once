@@ -9,7 +9,7 @@ import torch.optim as optim
 import numpy as np
 
 
-class SpeakerClassifierTrainer:
+class SpeakerVerificationTrainer:
 
     def __init__(self,
                  batch_size,
