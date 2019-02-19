@@ -8,16 +8,16 @@ import ray
 
 
 @ray.remote
-def process_with_mfcc(wav_path, out_path):
+def process_with_mfcc(wav_path, out_path, sample_rate):
     y, sr = librosa.load(wav_path)
-    mfcc = librosa.feature.mfcc(y=y, sr=sr, dct_type=2, n_mfcc=64, norm='ortho')
+    mfcc = librosa.feature.mfcc(y=y, sr=sample_rate, dct_type=2, n_mfcc=64, norm='ortho')
     np.save(out_path, mfcc)
 
 @ray.remote
-def process_with_mel(wav_path, out_path):
+def process_with_mel(wav_path, out_path, sample_rate):
     # TODO: Standardize sr across dataset
     y, sr = librosa.load(wav_path)
-    mel = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=2048, n_mels=64)
+    mel = librosa.feature.melspectrogram(y=y, sr=sample_rate, n_fft=2048, n_mels=64)
     assert mel.shape[0] == 64
     np.save(out_path, mel)
 
@@ -30,6 +30,9 @@ if __name__ == "__main__":
                         default='/home/rbrigden/voxceleb/processed')
     parser.add_argument("--mode", type=str,
                         default="mfcc")
+    parser.add_argument("--sample_rate", type=str,
+			default="22050")
+    
     args = parser.parse_args()
 
     source_path = args.source
@@ -53,9 +56,9 @@ if __name__ == "__main__":
             out_path = os.path.join(*([dest_path]+base_name+[out_name]))
             
             if args.mode == "mfcc":
-                task = process_with_mfcc.remote(wav_file_path, out_path)
+                task = process_with_mfcc.remote(wav_file_path, out_path, int(sample_rate))
             elif args.mode == "mel":
-                task = process_with_mel.remote(wav_file_path, out_path)
+                task = process_with_mel.remote(wav_file_path, out_path, int(sample_rate))
             else:
                 raise ValueError("Must specify valid mode")
             object_ids.append(task)
