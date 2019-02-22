@@ -101,6 +101,34 @@ class ContrastiveLoss(nn.Module):
 
 
 
+class SimpleContrastiveLoss(nn.Module):
+    """
+    Contrastive loss
+    Takes embeddings of two samples and a target label == 1 if samples are from the same class and label == 0 otherwise
+    """
+
+    def __init__(self, margin):
+        """
+        :param num_search_steps: Number of hyperopt steps per batch
+        """
+        super(SimpleContrastiveLoss, self).__init__()
+        self.margin = margin
+
+    def _loss(self, embedding1, embedding2, target, margin, size_average=True):
+        distances = (embedding2 - embedding1).pow(2).sum(1)  # squared distances
+        losses = 0.5 * (target.float() * distances +
+                        (1 + -1 * target).float() * F.relu(margin - distances.sqrt()).pow(2))
+        return losses.mean()
+
+
+    def forward(self, embedding1, embedding2, target, size_average=True):
+
+        loss = self._loss(embedding1, embedding2, target, self.margin, size_average=size_average)
+        return loss
+
+
+
+
 class TripletLoss(nn.Module):
     """
     Triplet loss

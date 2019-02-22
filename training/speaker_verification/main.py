@@ -51,10 +51,10 @@ def train_verification(args):
                                                  collate_fn=siamese_collate, num_workers=8)
     else:
         loader = dutils.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
-                                         collate_fn=train_collate_fn, num_workers=8)
+                                         collate_fn=train_collate_fn, num_workers=8, pin_memory=True)
 
     val_loader = dutils.DataLoader(val_set, batch_size=args.batch_size, shuffle=False, collate_fn=val_collate_fn,
-                                   num_workers=8)
+                                   num_workers=8, pin_memory=True)
 
     # Verification EER computation
     veri_evaluator = verify.VerificationEvaluator(args.voxceleb_test_path)
@@ -88,16 +88,15 @@ def train_verification(args):
                 tboard_plot(writer, total_steps, tboard_update)
         else:
             runner = trainer.train_epoch_verification(loader, initial_alpha)
-            for vloss, closs, best_margin in runner:
+            for vloss, best_margin in runner:
                 total_samples_processed += args.batch_size
                 nbatches += 1
-                total_loss += vloss + closs
+                total_loss += vloss
                 total_steps += 1
 
                 tboard_update = {
                     "verification_loss": vloss,
-                    "classification_loss": closs,
-                    "net_loss": vloss + closs,
+                    "net_loss": vloss,
                     "current_margin": best_margin
                 }
                 tboard_plot(writer, total_steps, tboard_update)

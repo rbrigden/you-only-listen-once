@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence
 import training.speaker_verification.model as models
-from training.speaker_verification.criterion import ContrastiveLoss
+from training.speaker_verification.criterion import ContrastiveLoss, SimpleContrastiveLoss
 import torch.optim as optim
 
 
@@ -18,20 +18,26 @@ class VerificationTrainer:
 
         self.num_speakers = num_speakers
 
+        cpd = None
         if resume:
             cpd = torch.load(resume, map_location=lambda storage, loc: storage)
             self.num_speakers = cpd["num_speakers"]
-
-            self.model.load_state_dict(cpd["model"])
-            self.optimizer.load_state_dict(cpd["optimizer"])
 
         self.model = models.IdentifyAndEmbed(self.num_speakers).cuda()
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.model.parameters(),
                                     lr=learning_rate,
                                     weight_decay=5e-4)
+        if resume:
+            self.model.load_state_dict(cpd["model"])
+            self.optimizer.load_state_dict(cpd["optimizer"])
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = learning_rate
+
         # Loss that adaptively searches for the optimal margin
-        self.verification_criterion = ContrastiveLoss(num_search_steps=5, search_freq=100)
+        # self.verification_criterion = ContrastiveLoss(num_search_steps=5, search_freq=100)
+        self.verification_criterion = SimpleContrastiveLoss(margin=50)
+
 
     def checkpoint(self, path):
         cpd = {
@@ -74,11 +80,11 @@ class VerificationTrainer:
             # loss = (1 - alpha) * classification_loss + alpha * verification_loss
             verification_loss.backward()
             self.optimizer.step()
-            best_margin = self.verification_criterion.margin_searcher.best_margin
-            yield verification_loss, best_margin
+            # best_margin = self.verification_criterion.margin_searcher.best_margin
+            yield verification_loss, 10
 
         # Reset the search at each epoch
-        self.verification_criterion.reset()
+        # self.verification_criterion.reset()
 
     def validation(self, data_loader):
         num_correct = 0

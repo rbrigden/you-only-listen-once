@@ -44,7 +44,7 @@ class IdentifyAndEmbed(nn.Module):
         )
 
         self.pool = nn.Sequential(AvgPool(2), Flatten())
-        self.embedding_size = 512
+        self.embedding_size = 128
         self.embedding = nn.Linear(896, self.embedding_size)
         self.ln = nn.LayerNorm(self.embedding_size)
         self.classification = nn.Linear(self.embedding_size, nspeakers)
