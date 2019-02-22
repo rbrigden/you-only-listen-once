@@ -30,11 +30,12 @@ class MarginSearch:
             self._next_probe = self.hyperopt.suggest(self.util_func)
         else:
             raise ValueError("Need to update before getting next search probe")
-        return self._next_probe
+        return self._next_probe["m"]
 
     def update(self, value):
         if self._next_probe is not None:
             self.hyperopt.register(params=self._next_probe, target=value)
+            self._next_probe = None
         else:
             raise ValueError("Need to get the next probe before updating")
 
@@ -52,14 +53,16 @@ class ContrastiveLoss(nn.Module):
     Takes embeddings of two samples and a target label == 1 if samples are from the same class and label == 0 otherwise
     """
 
-    def __init__(self, num_search_steps):
+    def __init__(self, num_search_steps, search_freq):
         """
         :param num_search_steps: Number of hyperopt steps per batch
         """
         super(ContrastiveLoss, self).__init__()
         self.init_margin = 0
         self.num_search_steps = num_search_steps
+        self.search_freq = search_freq
         self.margin_searcher = MarginSearch()
+        self.t = 0
 
     def _loss(self, embedding1, embedding2, target, margin, size_average=True):
         distances = (embedding2 - embedding1).pow(2).sum(1)  # squared distances
@@ -70,19 +73,25 @@ class ContrastiveLoss(nn.Module):
 
     def forward(self, embedding1, embedding2, target, size_average=True):
         current_best_margin = self.margin_searcher.best_margin
+        current_best_margin = self.init_margin if current_best_margin is None else current_best_margin
 
         loss_to_backward = self._loss(embedding1, embedding2, target, current_best_margin, size_average=size_average)
 
         e1, e2 = embedding1.data, embedding2.data
 
-        print("")
-        for t in range(self.num_search_steps):
-            margin = self.margin_searcher.next_probe()
+        # start = time.time()
 
-            # BayesianOpt is maximizer
-            score = - self._loss(e1, e2, target, margin, size_average=size_average)
-            self.margin_searcher.update(score)
+        if self.t % self.search_freq == 0:
+            for t in range(self.num_search_steps):
+                margin = self.margin_searcher.next_probe()
 
+                # BayesianOpt is maximizer
+                score = - self._loss(e1, e2, target, margin, size_average=size_average)
+                self.margin_searcher.update(score)
+        self.t += 1
+
+        # end = time.time()
+        # print("dt: {}".format(round(end - start)))
         return loss_to_backward
 
 
