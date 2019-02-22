@@ -31,10 +31,10 @@ def collate(batch):
 
 def compute_statistics(file_paths, feats=64):
     dset = WavDataset(file_paths)
-    loader = data.DataLoader(dset, batch_size=100, shuffle=False, num_workers=10, collate_fn=collate)
+    loader = data.DataLoader(dset, batch_size=200, shuffle=False, num_workers=15, collate_fn=collate)
     aggregate = (0, np.zeros(feats,), np.zeros(feats,))
 
-    num_batches = len(dset) // 100
+    num_batches = len(dset) // 200
 
 
     for idx, (utterance_batch,) in enumerate(loader):
@@ -59,8 +59,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     source_path = args.source
 
-    names = os.listdir(source_path)
-    file_paths = [os.path.join(source_path, name) for name in names]
+    file_paths = [os.path.join(root, name) for root, subdirs, names in os.walk(source_path) for name in names]
 
     stats = compute_statistics(file_paths)
     np.save(args.dest, stats)

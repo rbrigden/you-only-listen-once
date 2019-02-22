@@ -4,6 +4,7 @@ import torch
 import torch.utils.data as dutils
 import training.speaker_classification.train as train
 import training.speaker_verification.verify as verify
+
 import data.voxceleb.voxceleb as voxceleb
 
 
@@ -22,8 +23,10 @@ def train_speaker_classifier(args):
     train_set, val_set = voxceleb.VoxcelebID.create_split(args.voxceleb_path, speakers, split=0.8, shuffle=True)
 
     # Voxceleb length stats: (mean = 356, min = 171, max = 6242, std = 230)
-    train_collate_fn = voxceleb.voxceleb_clip_collate(400, sample=True)
-    val_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=False)
+    train_collate_fn = voxceleb.voxceleb_clip_collate(512, sample=True)
+    val_collate_fn = voxceleb.voxceleb_clip_collate(1024, sample=False)
+
+
 
     train_loader = dutils.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, collate_fn=train_collate_fn, num_workers=8)
     val_loader = dutils.DataLoader(val_set, batch_size=args.batch_size, shuffle=False, collate_fn=val_collate_fn, num_workers=8)

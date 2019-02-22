@@ -19,15 +19,15 @@ class Siamese(data.Dataset):
         return [u0, u1, l0, l1]
 
 
-class ContrastiveSampler(data.Sampler):
+class ContrastiveSampler(data.BatchSampler):
 
     def __init__(self, labels, nspeakers, batch_size):
         speaker_maps = []
         self.batch_size = batch_size
         self.nspeakers = nspeakers
         self.labels = labels
-        for i in range(nspeakers):
-            speaker_idxs = [j for j, l in enumerate(labels) if l == i]
+        for s in range(nspeakers):
+            speaker_idxs = [idx for idx, label in enumerate(labels) if label == s]
             np.random.shuffle(speaker_idxs)
             speaker_idxs = [(speaker_idxs[k], speaker_idxs[k + 1]) for k in range(0, len(speaker_idxs) - 1, 2)]
             speaker_maps += speaker_idxs
