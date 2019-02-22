@@ -16,8 +16,8 @@ def process_with_mfcc(wav_path, out_path, sample_rate):
 @ray.remote
 def process_with_mel(wav_path, out_path, sample_rate):
     # TODO: Standardize sr across dataset
-    y, sr = librosa.load(wav_path, sr = sample_rate)
-    mel = librosa.feature.melspectrogram(y=y, sr, n_fft=2048, n_mels=64)
+    y, sr = librosa.load(wav_path, sr=sample_rate)
+    mel = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=2048, n_mels=64)
     assert mel.shape[0] == 64
     np.save(out_path, mel)
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
                         default='/home/rbrigden/voxceleb/processed')
     parser.add_argument("--mode", type=str,
                         default="mfcc")
-    parser.add_argument("--sample_rate", type=int, default=22050)
+    parser.add_argument("--sample-rate", type=int, default=22050)
     
     args = parser.parse_args()
 
