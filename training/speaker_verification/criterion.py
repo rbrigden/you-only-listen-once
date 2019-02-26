@@ -5,6 +5,18 @@ import torch.nn.functional as F
 from bayes_opt import BayesianOptimization
 from bayes_opt import UtilityFunction
 
+class CosineLoss(nn.CosineEmbeddingLoss):
+
+    def __init__(self, **kwargs):
+        super(CosineLoss, self).__init__(**kwargs)
+
+
+    def forward(self, input1, input2, target):
+        scaled_target = 2 * target - 1
+        return super(CosineLoss, self).forward(input1, input2, scaled_target)
+
+
+
 import time
 class MarginSearch:
     """ Use Bayesian hyperparameter search to find an optimal margin """
@@ -114,16 +126,16 @@ class SimpleContrastiveLoss(nn.Module):
         super(SimpleContrastiveLoss, self).__init__()
         self.margin = margin
 
-    def _loss(self, embedding1, embedding2, target, margin, size_average=True):
-        distances = (embedding2 - embedding1).pow(2).sum(1)  # squared distances
-        losses = 0.5 * (target.float() * distances +
-                        (1 + -1 * target).float() * F.relu(margin - distances.sqrt()).pow(2))
-        return losses.mean()
+    def _loss(self, embedding1, embedding2, target):
+        dist = F.pairwise_distance(embedding1, embedding2, p=2)
+        loss_pos = target.float() * dist
+        loss_neg = (1 - target.float()) * F.relu(self.margin - dist)
+        return (loss_neg + loss_pos).mean()
 
 
-    def forward(self, embedding1, embedding2, target, size_average=True):
+    def forward(self, embedding1, embedding2, target):
 
-        loss = self._loss(embedding1, embedding2, target, self.margin, size_average=size_average)
+        loss = self._loss(embedding1, embedding2, target)
         return loss
 
 

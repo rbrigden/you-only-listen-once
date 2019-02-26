@@ -53,7 +53,7 @@ def train_verification(args):
         loader = dutils.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
                                          collate_fn=train_collate_fn, num_workers=8, pin_memory=True)
 
-    val_loader = dutils.DataLoader(val_set, batch_size=args.batch_size, shuffle=False, collate_fn=val_collate_fn,
+    val_loader = dutils.DataLoader(val_set, batch_size=5, shuffle=False, collate_fn=val_collate_fn,
                                    num_workers=8, pin_memory=True)
 
     # Verification EER computation
@@ -132,8 +132,12 @@ if __name__ == '__main__':
     parser.add_argument('--resume', type=str, default=None)
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--batch-size', type=int, default=100)
+    parser.add_argument('--device', type=int, default=0)
+
     parser.add_argument('--alpha', type=float, default=0.5,
                         help="ratio of verification loss to classification loss")
 
     parser.add_argument('--lr', type=float, default=5e-4)
-    train_verification(parser.parse_args())
+    args = parser.parse_args()
+    with torch.cuda.device(args.device):
+        train_verification(args)

@@ -2,11 +2,11 @@ import os, time, sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.utils.rnn import pad_sequence
 import training.speaker_verification.model as models
-from training.speaker_verification.criterion import ContrastiveLoss, SimpleContrastiveLoss
+from training.speaker_verification.criterion import ContrastiveLoss, SimpleContrastiveLoss, CosineLoss
+import training.speaker_verification.common as U
 import torch.optim as optim
-
+import numpy as np
 
 class VerificationTrainer:
 
@@ -36,7 +36,7 @@ class VerificationTrainer:
 
         # Loss that adaptively searches for the optimal margin
         # self.verification_criterion = ContrastiveLoss(num_search_steps=5, search_freq=100)
-        self.verification_criterion = SimpleContrastiveLoss(margin=50)
+        self.verification_criterion = SimpleContrastiveLoss(margin=1.0)
 
 
     def checkpoint(self, path):
@@ -47,15 +47,9 @@ class VerificationTrainer:
         }
         torch.save(cpd, path)
 
-    def _process_data_batch(self, data_batch):
-        # pad the sequences, each seq must be (L, *)
-        seq_lens = [len(x) for x in data_batch]
-        seq_batch = pad_sequence(data_batch, batch_first=True)
-        return seq_batch.unsqueeze(1).cuda(), seq_lens
-
     def train_epoch_classification(self, data_loader):
         for idx, (data_batch, label_batch) in enumerate(data_loader):
-            seq_batch, seq_lens = self._process_data_batch(data_batch)
+            seq_batch, seq_lens = U.process_data_batch(data_batch, mode='wrap')
             self.optimizer.zero_grad()
             preds, _ = self.model([seq_batch, seq_lens])
             loss = F.nll_loss(preds, label_batch.cuda())
@@ -69,8 +63,8 @@ class VerificationTrainer:
 
     def train_epoch_verification(self, data_loader, alpha=1.0):
         for idx, (data_batch1, data_batch2, label_batch1, label_batch2) in enumerate(data_loader):
-            seq_batch1, seq_lens1 = self._process_data_batch(data_batch1)
-            seq_batch2, seq_lens2 = self._process_data_batch(data_batch2)
+            seq_batch1, seq_lens1 = U.process_data_batch(data_batch1, mode='wrap')
+            seq_batch2, seq_lens2 = U.process_data_batch(data_batch2, mode='wrap')
             self.optimizer.zero_grad()
             preds1, em1 = self.model([seq_batch1, seq_lens1])
             preds2, em2 = self.model([seq_batch2, seq_lens2])
@@ -89,7 +83,7 @@ class VerificationTrainer:
     def validation(self, data_loader):
         num_correct = 0
         for idx, (data_batch, label_batch) in enumerate(data_loader):
-            seq_batch, seq_lens = self._process_data_batch(data_batch)
+            seq_batch, seq_lens = U.process_data_batch(data_batch, mode='wrap')
             preds, _ = self.model([seq_batch, seq_lens])
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             num_correct += correct.item()

@@ -3,9 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence
-import training.speaker_classification.model as models
+import training.speaker_verification.model as models
 import torch.optim.lr_scheduler
-
 import torch.optim as optim
 import numpy as np
 
@@ -16,7 +15,7 @@ class SpeakerClassifierTrainer:
                  batch_size,
                  learning_rate,
                  num_speakers=1000):
-        self.model = models.SpeakerClassifier2d(num_speakers).cuda()
+        self.model = models.DenseIdentifyAndEmbed(num_speakers).cuda()
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.model.parameters(),
                                     lr=learning_rate,
@@ -35,10 +34,16 @@ class SpeakerClassifierTrainer:
         }
         torch.save(cpd, path)
 
-    def _process_data_batch(self, data_batch):
+    def _process_data_batch(self, data_batch, mode='zeros'):
         # pad the sequences, each seq must be (L, *)
         seq_lens = [len(x) for x in data_batch]
-        seq_batch = pad_sequence(data_batch, batch_first=True)
+
+        if mode == 'zeros':
+            seq_batch = pad_sequence(data_batch, batch_first=True)
+        elif mode == 'wrap':
+            seq_batch = torch.stack([torch.FloatTensor(np.pad(x.numpy(), mode='wrap', axis=0)) for x in data_batch])
+        else:
+            raise ValueError("Invalid mode specified")
         return seq_batch.unsqueeze(1).cuda(), seq_lens
 
     def train_epoch(self, data_loader):
@@ -49,6 +54,8 @@ class SpeakerClassifierTrainer:
             loss = F.nll_loss(preds, label_batch.cuda())
             loss.backward()
             self.optimizer.step()
+            print("here2")
+
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             yield loss.item(), correct.item()
 
@@ -56,7 +63,7 @@ class SpeakerClassifierTrainer:
         self.model.eval()
         num_correct = 0
         for idx, (data_batch, label_batch) in enumerate(data_loader):
-            seq_batch, seq_lens = self._process_data_batch(data_batch)
+            seq_batch, seq_lens = self._process_data_batch(data_batch, mode='wrap')
             preds, _ = self.model([seq_batch, seq_lens])
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             num_correct += correct.item()
