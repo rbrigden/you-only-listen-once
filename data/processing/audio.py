@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import training.speaker_classification.model as models
+import training.speaker_verification.model as models
 import torch.utils.data as data
 import argparse
 import librosa

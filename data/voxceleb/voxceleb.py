@@ -108,14 +108,13 @@ def voxceleb_collate(batch):
     return [data, target]
 
 
-def voxceleb_clip_collate(max_size, sample=True):
+def voxceleb_clip_collate(max_size, min_size=20, sample=True):
     """ If len(utterance) > max_size, sample a max_size segment """
     def _collate_fn(batch):
         data = []
         for x in batch:
             s = x[0].permute(1, 0)
             s = voxceleb_sample_normalize(s)
-
             if sample and len(s) > max_size:
                 start_idx = np.random.randint(0, len(s)-max_size)
                 s = s[start_idx:start_idx+max_size]
