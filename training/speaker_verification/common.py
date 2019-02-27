@@ -10,6 +10,8 @@ def process_data_batch(data_batch, mode='zeros'):
     pad_widths = [max_len - l for l in seq_lens]
 
     if mode == 'zeros':
+        data_batch = sorted(data_batch, key=lambda s: s.size(0), reverse=True)
+        seq_lens = sorted(seq_lens, reverse=True)
         seq_batch = pad_sequence(data_batch, batch_first=True)
     elif mode == 'wrap':
         seq_batch = torch.stack(
@@ -17,4 +19,5 @@ def process_data_batch(data_batch, mode='zeros'):
              zip(pad_widths, data_batch)])
     else:
         raise ValueError("Invalid mode specified")
+
     return seq_batch.unsqueeze(1).cuda(), seq_lens

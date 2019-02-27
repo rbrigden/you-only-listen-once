@@ -19,11 +19,12 @@ def cosine_similarity(e1, e2):
 
 class VerificationEvaluator:
 
-    def __init__(self, processed_test_root):
+    def __init__(self, processed_test_root, pad='wrap'):
         self.processed_test_root = processed_test_root
         # TODO: Make this work for NIST-SRE
         self.enrol_set, self.test_set, self.labels = self._prepare_voxceleb()
         self.similarity_fn = cosine_similarity
+        self.pad_mode = pad
 
     def _prepare_voxceleb(self):
         veri_file_path = "data/voxceleb/veri_test.txt"
@@ -41,7 +42,7 @@ class VerificationEvaluator:
         test_embeddings = torch.zeros((len(self.test_set), embedding_size)).cuda()
 
         for idx, (enrol_batch,) in enumerate(enrol_loader):
-            enrol_batch, enrol_seq_lens = U.process_data_batch(enrol_batch, mode='wrap')
+            enrol_batch, enrol_seq_lens = U.process_data_batch(enrol_batch, mode=self.pad_mode)
 
             bsize = enrol_batch.size()[0]
             bidx = idx * bsize
@@ -49,7 +50,7 @@ class VerificationEvaluator:
                 enrol_embeddings[bidx:bidx + bsize, :] = model.forward([enrol_batch, enrol_seq_lens], em=True)
 
         for idx, (test_batch,) in enumerate(test_loader):
-            test_batch, test_seq_lens = U.process_data_batch(test_batch, mode='wrap')
+            test_batch, test_seq_lens = U.process_data_batch(test_batch, mode=self.pad_mode)
 
             bsize = test_batch.size()[0]
             bidx = idx * bsize

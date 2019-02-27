@@ -14,16 +14,20 @@ class VerificationTrainer:
                  batch_size,
                  learning_rate,
                  num_speakers=1000,
-                 resume=None):
+                 resume=None,
+                 pad='wrap'):
 
         self.num_speakers = num_speakers
+
+        # padding mode
+        self.pad_mode = pad
 
         cpd = None
         if resume:
             cpd = torch.load(resume, map_location=lambda storage, loc: storage)
             self.num_speakers = cpd["num_speakers"]
 
-        self.model = models.IdentifyAndEmbed(self.num_speakers).cuda()
+        self.model = models.RecurrentIdentifyAndEmbed(self.num_speakers).cuda()
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.model.parameters(),
                                     lr=learning_rate,
@@ -49,7 +53,7 @@ class VerificationTrainer:
 
     def train_epoch_classification(self, data_loader):
         for idx, (data_batch, label_batch) in enumerate(data_loader):
-            seq_batch, seq_lens = U.process_data_batch(data_batch, mode='wrap')
+            seq_batch, seq_lens = U.process_data_batch(data_batch, mode=self.pad_mode)
             self.optimizer.zero_grad()
             preds, _ = self.model([seq_batch, seq_lens])
             loss = F.nll_loss(preds, label_batch.cuda())
@@ -63,8 +67,8 @@ class VerificationTrainer:
 
     def train_epoch_verification(self, data_loader, alpha=1.0):
         for idx, (data_batch1, data_batch2, label_batch1, label_batch2) in enumerate(data_loader):
-            seq_batch1, seq_lens1 = U.process_data_batch(data_batch1, mode='wrap')
-            seq_batch2, seq_lens2 = U.process_data_batch(data_batch2, mode='wrap')
+            seq_batch1, seq_lens1 = U.process_data_batch(data_batch1, mode=self.pad_mode)
+            seq_batch2, seq_lens2 = U.process_data_batch(data_batch2, mode=self.pad_mode)
             self.optimizer.zero_grad()
             preds1, em1 = self.model([seq_batch1, seq_lens1])
             preds2, em2 = self.model([seq_batch2, seq_lens2])
@@ -83,7 +87,7 @@ class VerificationTrainer:
     def validation(self, data_loader):
         num_correct = 0
         for idx, (data_batch, label_batch) in enumerate(data_loader):
-            seq_batch, seq_lens = U.process_data_batch(data_batch, mode='wrap')
+            seq_batch, seq_lens = U.process_data_batch(data_batch, mode=self.pad_mode)
             preds, _ = self.model([seq_batch, seq_lens])
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             num_correct += correct.item()

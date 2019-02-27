@@ -112,6 +112,52 @@ class DenseIdentifyAndEmbed(nn.Module):
 
 
 
+class RecurrentIdentifyAndEmbed(nn.Module):
+    """ Bidirectional Pyramidal LSTM """
+
+    def __init__(self, nspeakers, features=64):
+        super(RecurrentIdentifyAndEmbed, self).__init__()
+        hidden_size = 128
+        self.rnns = nn.ModuleList([
+            nn.LSTM(features, hidden_size=hidden_size, num_layers=1, batch_first=True, bidirectional=True),
+            nn.LSTM(hidden_size * 4, hidden_size=hidden_size * 2, num_layers=1, batch_first=True, bidirectional=True),
+            nn.LSTM(hidden_size * 8, hidden_size=hidden_size * 4, num_layers=1, batch_first=True, bidirectional=True)
+        ])
+
+        self.embedding_size = 512
+        self.embedding_layer = nn.Linear(8 * hidden_size, self.embedding_size)
+        self.classification_layer = nn.Linear(self.embedding_size, nspeakers)
+        self.ln = nn.LayerNorm(self.embedding_size)
+
+    def _pyramid_forward(self, seqs, seq_lens):
+
+        for idx, rnn in enumerate(self.rnns):
+            packed_seqs = nn.utils.rnn.pack_padded_sequence(seqs, seq_lens, batch_first=True)
+            out, (h, c) = rnn(packed_seqs)
+            if idx < len(self.rnns) - 1:
+                seqs, seq_lens = nn.utils.rnn.pad_packed_sequence(out, batch_first=True)
+                if seqs.size(1) % 2 == 1:
+                    seqs = seqs[:, :-1]
+                b, t, f = seqs.size()
+                nt, nf = (t // 2, f * 2)
+                seqs = seqs.contiguous().view(b, nt, nf)
+                seq_lens = seq_lens // 2
+
+        return h.permute(1, 0, 2).contiguous().view(-1, 1024)
+
+
+    def forward(self, xs, em=False):
+        """ Set em to skip the classification"""
+        x, seq_lens = xs
+        out = self._pyramid_forward(x.squeeze(1), seq_lens)
+        embedding = self.embedding_layer(out)
+        if em:
+            return embedding
+        z = F.relu(embedding, inplace=True)
+        z = self.ln(z)
+        c = self.classification_layer(z)
+        return F.log_softmax(c, dim=1), embedding
+
 
 
 
