@@ -129,6 +129,12 @@ class RecurrentIdentifyAndEmbed(nn.Module):
         self.classification_layer = nn.Linear(self.embedding_size, nspeakers)
         self.ln = nn.LayerNorm(self.embedding_size)
 
+        for name, param in self.rnns.named_parameters():
+            if 'bias' in name:
+                nn.init.constant(param, 0.0)
+            elif 'weight' in name:
+                nn.init.xavier_normal(param)
+
     def _pyramid_forward(self, seqs, seq_lens):
 
         for idx, rnn in enumerate(self.rnns):

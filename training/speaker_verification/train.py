@@ -22,6 +22,8 @@ class VerificationTrainer:
         # padding mode
         self.pad_mode = pad
 
+        self.clip = 0.25
+
         cpd = None
         if resume:
             cpd = torch.load(resume, map_location=lambda storage, loc: storage)
@@ -29,9 +31,10 @@ class VerificationTrainer:
 
         self.model = models.RecurrentIdentifyAndEmbed(self.num_speakers).cuda()
         self.batch_size = batch_size
-        self.optimizer = optim.Adam(self.model.parameters(),
+        self.optimizer = optim.SGD(self.model.parameters(),
                                     lr=learning_rate,
-                                    weight_decay=5e-4)
+                                    weight_decay=5e-4,
+                                    momentum=0.9)
         if resume:
             self.model.load_state_dict(cpd["model"])
             self.optimizer.load_state_dict(cpd["optimizer"])
@@ -58,6 +61,8 @@ class VerificationTrainer:
             preds, _ = self.model([seq_batch, seq_lens])
             loss = F.nll_loss(preds, label_batch.cuda())
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip)
+
             self.optimizer.step()
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             yield loss.item(), correct.item()
