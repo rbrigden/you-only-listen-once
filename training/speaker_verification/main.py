@@ -25,11 +25,13 @@ def train_verification(args):
         trainer = train.VerificationTrainer(batch_size=args.batch_size,
                                             learning_rate=args.lr,
                                             num_speakers=len(speakers),
-                                            resume=args.resume)
+                                            resume=args.resume,
+                                            pad=args.pad)
     else:
         trainer = train.VerificationTrainer(batch_size=args.batch_size,
                                             learning_rate=args.lr,
-                                            num_speakers=len(speakers))
+                                            num_speakers=len(speakers),
+                                            pad=args.pad)
         print("Initialize classifier params from scratch")
 
     train_set, val_set = voxceleb.VoxcelebID.create_split(args.voxceleb_path, speakers, split=0.8, shuffle=True)
@@ -57,7 +59,7 @@ def train_verification(args):
                                    num_workers=8, pin_memory=True)
 
     # Verification EER computation
-    veri_evaluator = verify.VerificationEvaluator(args.voxceleb_test_path)
+    veri_evaluator = verify.VerificationEvaluator(args.voxceleb_test_path, pad=args.pad)
 
     total_samples_processed = 0
 
@@ -133,6 +135,8 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--batch-size', type=int, default=100)
     parser.add_argument('--device', type=int, default=0)
+    parser.add_argument('--pad', type=str, default='zeros')
+
 
     parser.add_argument('--alpha', type=float, default=0.5,
                         help="ratio of verification loss to classification loss")
