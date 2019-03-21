@@ -39,7 +39,7 @@ def train_verification(args):
     siamese_train_set = Siamese(train_set)
 
     # Voxceleb length stats: (mean = 356, min = 171, max = 6242, std = 230)
-    train_collate_fn = voxceleb.voxceleb_clip_collate(400, sample=True)
+    train_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=True)
     val_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=False)
 
     def siamese_collate(batch):
