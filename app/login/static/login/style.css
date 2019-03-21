@@ -30,6 +30,15 @@
     text-align: center;
 }
 
+#nameInp{
+    text-align: center;
+    margin-left: 650px;
+    height: 50px;
+    width: 200px;
+    background-color: #ABA4A2;
+    font-family: Arial;
+}
+
 body{
 	background-color: #819FF7;
 }
@@ -45,10 +54,21 @@ body{
 
 }
 
+#infoReg{
+    background-color: #2E64FE;
+    color: white;
+    width: 540px;
+    height: 550px;
+    text-align: center;
+    margin-left: 450px;
+    font-size: 15pt;
+
+}
+
 #randphrase{
 	background-color: #819FF7;
-	width: 300px;
-	height: 170px;
+	width: 350px;
+	height: 200px;
 	font-size: 25pt;
 	text-align: center;
 	margin-left: 110px;
@@ -57,12 +77,24 @@ body{
 	border-width: 5pt;
 }
 
+#randphraseReg{
+    background-color: #819FF7;
+    width: 350px;
+    height: 300px;
+    font-size: 10pt;
+    text-align: center;
+    margin-left: 110px;
+    color: black;
+    border-color: black;
+    border-width: 5pt;
+}
+
 #recordings{
     text-align: center;
 }
 
 #startrec{
-    width: 170px;
+    width: 200px;
     height: 40px;
     margin-top: 70px;
     background-color: #819FF7;
@@ -76,7 +108,7 @@ body{
 }
 
 #stoprec{
-    width: 170px;
+    width: 200px;
     height: 40px;
     margin-top: 70px;
     background-color: #819FF7;

@@ -28,9 +28,23 @@
       <div id = "nameInfo">
         <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
       </div>
-      <div id = "info">
+      <div id = "infoReg">
         <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
-        <p id = "randphrase"> PlaceHolder </p>
+        <p id = "randphraseReg"> Far out in the uncharted backwaters of the unfashionable  end  of
+        the  western  spiral  arm  of  the Galaxy lies a small unregarded
+        yellow sun.
+         
+        Orbiting this at a distance of roughly ninety-two  million  miles
+        is  an  utterly insignificant little blue green planet whose ape-
+        descended life forms are so amazingly primitive that  they  still
+        think digital watches are a pretty neat idea.
+         
+        This planet has - or rather had - a problem, which was this: most
+        of  the  people  on  it were unhappy for pretty much of the time.
+        Many solutions were suggested for this problem, but most of these
+        were  largely  concerned with the movements of small green pieces
+        of paper, which is odd because on the whole it wasn't  the  small
+        green pieces of paper that were unhappy. </p>
         <div id = "recbuts">
           <input type = "button" id = "startrec" class = "record" value = "Start Recording"> 
           <input type = "button" id = "stoprec" name = "stoprec" class = "stop" value = "Stop Recording"> 
@@ -72,16 +86,13 @@
           });
         }
 
-        window.onload = function() {
-          getText();
-        };
-
         function stopRecording() {
           stopButton.disabled = true;
           recordButton.disabled = false;
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
           rec.exportWAV(createDownloadLink);
+          alert("Thank you for registering!");
         }
 
         function getCSRFToken() {
@@ -111,49 +122,16 @@
           li.appendChild(link);
           li.appendChild(document.createTextNode (" "))
           console.log(blob);
-          
+
           var name = document.getElementById("nameInp");
           var nameValue = name.value;
           name.value = '';
+        
 
           var req = new XMLHttpRequest();
           req.open("POST", "/login", true);
           req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
           req.send("name="+nameValue+"&recording="+blob+"&csrfmiddlewaretoken="+getCSRFToken());
-        }
-
-        function getText(){
-          // read text from URL location
-          var request = new XMLHttpRequest();
-          request.open('GET', 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt', true);
-          request.send(null);
-          request.onreadystatechange = function () {
-              if (request.readyState === 4 && request.status === 200) {
-                  var type = request.getResponseHeader('Content-Type');
-                  if (type.indexOf("text") !== 1) {
-                      text = request.responseText;
-                      text = text.split('\n');
-                      length_array = text.length;
-                      word1 = text[getRandomInt(length_array)];
-                      word2 = text[getRandomInt(length_array)];
-                      word3 = text[getRandomInt(length_array)];
-                      word4 = text[getRandomInt(length_array)];
-                      word5 = text[getRandomInt(length_array)];
-                      var new__phrase = [];
-                      new__phrase.push(word1," ",word2," ", word3, " ", word4, " ", word5);
-                      document.getElementById("randphrase").innerHTML = new__phrase.join("");
-                      return;
-                  }
-              }
-            }
-        }
-
-        function sleep(ms) {
-          return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        function getRandomInt(max) {
-          return Math.floor(Math.random() * Math.floor(max));
         }
 
 
@@ -162,7 +140,3 @@
       <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script> 
   </body>
 </html>
-
-
-
-
