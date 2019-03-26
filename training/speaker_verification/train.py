@@ -22,16 +22,21 @@ class VerificationTrainer:
         # padding mode
         self.pad_mode = pad
 
+        self.clip = 0.25
+
         cpd = None
         if resume:
             cpd = torch.load(resume, map_location=lambda storage, loc: storage)
             self.num_speakers = cpd["num_speakers"]
 
-        self.model = models.RecurrentIdentifyAndEmbed(self.num_speakers).cuda()
+        self.model = models.IdentifyAndEmbed(self.num_speakers).cuda()
         self.batch_size = batch_size
-        self.optimizer = optim.Adam(self.model.parameters(),
+        self.optimizer = optim.SGD(self.model.parameters(),
                                     lr=learning_rate,
-                                    weight_decay=5e-4)
+                                    weight_decay=5e-4,
+                                    momentum=0.9)
+        self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[5, 20, 30])
+
         if resume:
             self.model.load_state_dict(cpd["model"])
             self.optimizer.load_state_dict(cpd["optimizer"])
@@ -58,9 +63,11 @@ class VerificationTrainer:
             preds, _ = self.model([seq_batch, seq_lens])
             loss = F.nll_loss(preds, label_batch.cuda())
             loss.backward()
+            # torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip)
             self.optimizer.step()
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             yield loss.item(), correct.item()
+        self.lr_scheduler.step()
 
     def _verification_objective(self, embeddings1, embeddings2, labels):
         return self.verification_criterion(embeddings1, embeddings2, labels)
@@ -74,12 +81,12 @@ class VerificationTrainer:
             preds2, em2 = self.model([seq_batch2, seq_lens2])
             embed_labels = (label_batch1 == label_batch2).float().cuda()
             verification_loss = self._verification_objective(preds1, preds2, embed_labels)
-            # classification_loss = F.nll_loss(preds1, label_batch1.cuda()) + F.nll_loss(preds2, label_batch2.cuda())
-            # loss = (1 - alpha) * classification_loss + alpha * verification_loss
-            verification_loss.backward()
+            classification_loss = F.nll_loss(preds1, label_batch1.cuda()) + F.nll_loss(preds2, label_batch2.cuda())
+            loss = (1 - alpha) * classification_loss + alpha * verification_loss
+            loss.backward()
             self.optimizer.step()
             # best_margin = self.verification_criterion.margin_searcher.best_margin
-            yield verification_loss, 10
+            yield verification_loss, classification_loss
 
         # Reset the search at each epoch
         # self.verification_criterion.reset()
@@ -91,6 +98,7 @@ class VerificationTrainer:
             preds, _ = self.model([seq_batch, seq_lens])
             correct = (torch.argmax(preds, dim=1) == label_batch.cuda()).sum()
             num_correct += correct.item()
+
         return 1.0 - (num_correct / float(len(data_loader.dataset)))
 
     def compute_verification_eer(self, validator):

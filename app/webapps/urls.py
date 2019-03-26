@@ -19,7 +19,5 @@ from django.conf.urls import include, url
 from login import views
 
 urlpatterns = [
-url(r'^', include('login.urls')),
-    url(r'^admin/', admin.site.urls),
-    url(r'^login/', include('login.urls')),
+	url(r'^', include('login.urls')),
 ]

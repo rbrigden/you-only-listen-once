@@ -28,25 +28,25 @@ class IdentifyAndEmbed(nn.Module):
         self.net = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=7, stride=(1, 1), padding=(1, 1), bias=False),
             nn.BatchNorm2d(16),
-            nn.ELU(),
+            nn.ELU(inplace=True),
             nn.Conv2d(16, 32, kernel_size=5, stride=(1, 1), padding=(1, 1), bias=False),
             nn.BatchNorm2d(32),
-            nn.ELU(),
+            nn.ELU(inplace=True),
             BasicBlock(32, 32),
             nn.Conv2d(32, 64, kernel_size=3, stride=(2, 2), bias=False),
             nn.BatchNorm2d(64),
-            nn.ELU(),
+            nn.ELU(inplace=True),
             BasicBlock(64, 64),
             nn.Conv2d(64, 256, kernel_size=3, stride=(1, 2), padding=(1, 0), bias=False),
             nn.BatchNorm2d(256),
-            nn.ELU(),
+            nn.ELU(inplace=True),
             nn.Conv2d(256, 128, kernel_size=3, stride=(2, 2), bias=True),
         )
 
         self.pool = nn.Sequential(AvgPool(2), Flatten())
-        self.embedding_size = 256
+        self.embedding_size = 128
         self.embedding = nn.Linear(768, self.embedding_size)
-        self.ln = nn.LayerNorm(self.embedding_size)
+        # self.ln = nn.LayerNorm(self.embedding_size)
         self.classification = nn.Linear(self.embedding_size, nspeakers)
 
     def _make_mask(self, utterance_shape, features_shape, seq_lens):
@@ -66,12 +66,13 @@ class IdentifyAndEmbed(nn.Module):
         # mask = self._make_mask(x.shape, out.shape, seq_lens)
         # out *= mask
         out = self.pool(out)
-        e = self.embedding(out)
-        e = self.ln(F.relu(e))
+        z = self.embedding(out)
+        embedding = z / torch.norm(z, p='fro', dim=1).view(-1, 1)
+        z = F.elu(z, inplace=True)
         if em:
-            return e
-        c = self.classification(e)
-        return F.log_softmax(c, dim=1), e
+            return embedding
+        c = self.classification(z)
+        return F.log_softmax(c, dim=1), embedding
 
 
 class DenseNetWithEmbeddings(torchvision.models.DenseNet):
@@ -128,6 +129,12 @@ class RecurrentIdentifyAndEmbed(nn.Module):
         self.embedding_layer = nn.Linear(8 * hidden_size, self.embedding_size)
         self.classification_layer = nn.Linear(self.embedding_size, nspeakers)
         self.ln = nn.LayerNorm(self.embedding_size)
+
+        for name, param in self.rnns.named_parameters():
+            if 'bias' in name:
+                nn.init.constant(param, 0.0)
+            elif 'weight' in name:
+                nn.init.xavier_normal(param)
 
     def _pyramid_forward(self, seqs, seq_lens):
 

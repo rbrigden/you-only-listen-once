@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import training.speaker_classification.model as models
+import training.speaker_verification.model as models
 import torch.utils.data as data
 import argparse
 import os
@@ -44,9 +44,9 @@ class SpeakerEmbedInference:
 
 
 def transform(embeddings):
-    pca = PCA(n_components=25)
+    pca = PCA(n_components=30)
     reduced_embeddings = pca.fit_transform(embeddings)
-    tsne = TSNE(n_components=2, perplexity=10)
+    tsne = TSNE(n_components=2, perplexity=5)
     output = tsne.fit_transform(reduced_embeddings)
     return output
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     names = os.listdir(source_path)
     file_paths = [os.path.join(source_path, name) for name in names]
 
-    model = models.SpeakerClassifier2d(1200).cuda()
+    model = models.IdentifyAndEmbed(1200).cuda()
     inference = SpeakerEmbedInference(model)
     inference.load_params(args.param_path)
 

@@ -16,7 +16,6 @@ class CosineLoss(nn.CosineEmbeddingLoss):
         return super(CosineLoss, self).forward(input1, input2, scaled_target)
 
 
-
 import time
 class MarginSearch:
     """ Use Bayesian hyperparameter search to find an optimal margin """
@@ -57,7 +56,6 @@ class MarginSearch:
             return self.hyperopt.max["params"]["m"]
         else:
             return None
-
 
 class ContrastiveLoss(nn.Module):
     """
