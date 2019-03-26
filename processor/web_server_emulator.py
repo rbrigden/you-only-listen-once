@@ -28,7 +28,7 @@ def get_unique_id(audio_data):
     return hash_blob(audio_data)
 
 def build_fixtures():
-    audio_fixtures_path = "app/processor/audio_fixtures"
+    audio_fixtures_path = "processor/audio_fixtures"
     audio_paths = [os.path.join(audio_fixtures_path, file_name) for file_name in os.listdir(audio_fixtures_path)]
     requests = []
     audio_data = []
@@ -60,6 +60,6 @@ def main_loop():
 
 if __name__ == "__main__":
     gin.external_configurable(redis.Redis, module="redis")
-    gin.parse_config_file("app/processor/config/prod.gin")
+    gin.parse_config_file("processor/config/prod.gin")
     main_loop()
 

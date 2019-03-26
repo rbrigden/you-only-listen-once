@@ -2,12 +2,10 @@ import gin
 import redis
 import json
 import time
-from app.processor.speaker_classification_processor import SpeakerClassificationProcessor
-from app.processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
-from app.processor.speech_rec_processor import SpeechRecognitionProcessor
-
-
-import app.processor.utils as U
+from processor.speaker_classification_processor import SpeakerClassificationProcessor
+from processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
+from processor.speech_rec_processor import SpeechRecognitionProcessor
+import processor.utils as U
 from multiprocessing import Process
 
 
@@ -25,7 +23,8 @@ def write_result(result):
 class YoloProcessor:
 
     def __init__(self):
-        self.speaker_classification =
+        self.speaker_classification = SpeakerClassificationProcessor()
+
 
 
 
@@ -48,7 +47,7 @@ class YoloProcessor:
 
 if __name__ == "__main__":
     gin.external_configurable(redis.Redis, module="redis")
-    gin.parse_config_file("app/processor/config/prod.gin")
+    gin.parse_config_file("processor/config/prod.gin")
 
 
     processor = YoloProcessor()
