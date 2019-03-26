@@ -1,0 +1,13 @@
+- hosts: localhost
+  connection: local
+  gather_facts: False
+
+  tasks:
+
+    - name: Stop all webserver instances
+      ec2:
+        region: us-east-1
+        wait: true
+        state: stopped
+        instance_tags:
+          Name: webserver
