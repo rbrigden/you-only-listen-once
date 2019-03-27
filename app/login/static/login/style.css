@@ -2,23 +2,31 @@
     width: 270px;
     height: 40px;
     margin-top: 110px;
-    background-color: #FE9A2E;
+    background-color: #98F0E1;
     font-size: 20pt;
-    color: white;
+    color: black;
     height: 80px;
 }
+
 
 #loginbut:hover{
 	background-color: #A4A4A4;
 }
 
+
+
+#nameInfo{
+    height: 80px;
+}
+
+
 #signupbut{
     width: 270px;
     height: 40px;
     margin-top: 110px;
-    background-color: #FE9A2E;
+    background-color: #98F0E1;
     font-size: 20pt;
-    color: white;
+    color: black;
     height: 80px;
 }
 
@@ -31,31 +39,32 @@
 }
 
 #nameInp{
-    text-align: center;
-    margin-left: 650px;
+    margin-left: 450px;
     height: 50px;
-    width: 200px;
+    width: 545px;
     background-color: #ABA4A2;
     font-family: Arial;
 }
 
 body{
-	background-color: #819FF7;
+	background-color: #E2EEEC;
 }
 
 #info{
-	background-color: #2E64FE;
-	color: white;
+	background-color: #B9F2EB;
+	color: black;
 	width: 540px;
 	height: 450px;
 	text-align: center;
 	margin-left: 450px;
 	font-size: 15pt;
+    border-width: 2pt;
+    border-color: black;
 
 }
 
 #infoReg{
-    background-color: #2E64FE;
+    background-color: #D1F7F2;
     color: white;
     width: 540px;
     height: 550px;
@@ -66,7 +75,7 @@ body{
 }
 
 #randphrase{
-	background-color: #819FF7;
+	background-color: #83A5A0;
 	width: 350px;
 	height: 200px;
 	font-size: 25pt;
@@ -78,7 +87,7 @@ body{
 }
 
 #randphraseReg{
-    background-color: #819FF7;
+    background-color: #D1F7F2;
     width: 350px;
     height: 300px;
     font-size: 10pt;
@@ -94,12 +103,12 @@ body{
 }
 
 #startrec{
-    width: 200px;
+    width: 230px;
     height: 40px;
     margin-top: 70px;
-    background-color: #819FF7;
+    background-color: #98F0E1;
     font-size: 20pt;
-    color: white;
+    color: black;
     height: 80px;
 }
 
@@ -108,12 +117,12 @@ body{
 }
 
 #stoprec{
-    width: 200px;
+    width: 230px;
     height: 40px;
     margin-top: 70px;
-    background-color: #819FF7;
+    background-color: #98F0E1;
     font-size: 20pt;
-    color: white;
+    color: black;
     height: 80px;
 }
 
