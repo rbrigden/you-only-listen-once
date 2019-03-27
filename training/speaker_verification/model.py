@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import  torchvision.models
 from torchvision.models.resnet import BasicBlock
+import gin
 
 class Flatten(nn.Module):
     def forward(self, x):
@@ -65,7 +66,7 @@ class BasicBlock5x5(nn.Module):
         return out
 
 
-
+@gin.configurable
 class IdentifyAndEmbed(nn.Module):
 
     def __init__(self, nspeakers):

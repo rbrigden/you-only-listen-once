@@ -4,6 +4,7 @@ import json
 import time
 from processor.speaker_classification_processor import SpeakerClassificationProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
+from processor.speaker_embedding_processor import SpeakerEmbeddingInference
 from processor.speech_rec_processor import SpeechRecognitionProcessor
 from processor.audio_processor import AudioProcessor
 import processor.utils as U

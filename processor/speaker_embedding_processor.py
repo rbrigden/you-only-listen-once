@@ -3,8 +3,9 @@ import numpy as np
 import inference
 import training.speaker_verification.model as models
 from torch.nn.utils.rnn import pad_sequence
+import gin
 
-
+@gin.configurable
 class SpeakerEmbeddingProcessor:
 
     def __init__(self, model_cls, checkpoint_path):
@@ -22,7 +23,7 @@ class SpeakerEmbeddingProcessor:
 def normalize(x, mean, variance):
     return (x - mean.view(1, -1)) / torch.sqrt(variance.view(1, -1))
 
-
+@gin.configurable
 class SpeakerEmbeddingInference:
 
     def __init__(self, model, stats_path):
