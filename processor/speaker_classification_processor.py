@@ -3,7 +3,7 @@
 class SpeakerClassificationProcessor:
 
     def __init__(self, ):
-        raise NotImplementedError
+        self.x = 9
 
     def add_speaker(self, embeddings):
         """ Add speaker to the classification set

@@ -8,25 +8,58 @@ import pyaudio
 import wave
 import io
 from django.views.decorators.csrf import csrf_exempt
+import redis
+import hashlib
+from datetime import datetime
+import json
+
+_redis_conn = None
+
+def get_redis_conn():
+    global _redis_conn
+    if _redis_conn is None:
+        _redis_conn = redis.Redis(host='localhost', port=6379)
+    return _redis_conn
+
+
+def myconverter(o):
+    if isinstance(o, datetime):
+        return o.__str__()
+
+def get_unique_id(audio_data):
+    return hash_blob(audio_data)
+
+def hash_blob(blob):
+    md5 = hashlib.md5()
+
+    # hash blob data
+    md5.update(blob)
+
+    # add timestamp to the hash
+    md5.update(str(datetime.now()).encode('utf-8'))
+
+    return md5.hexdigest()
 
 # Create your views here.
-
-#@ensure_csrf_cookie
+# TODO: Will need CSRF for prod
 @csrf_exempt
 def events(request):
-    #if request.method == "POST":
-    print('in events')
-    print(request.method)
     if request.method == "POST":
-        print('in POST')
-        #print(request.POST['name'])
-        print(type(request.FILES['picture']))
-        play_audio(request.FILES['picture'])
-        #play_audio(bytes(request.POST['recording']))
-        #print('after play blob')
-        #new_Person = Person(name=request.POST['name'], recording=request.POST['recording'])
-        #new_Person.save()
+        print('POST request made')
+        conn = get_redis_conn()
+        audio_bytes = request.FILES['picture'].read()
+
+        request = {
+            "id": get_unique_id(audio_bytes),
+            "timestamp": datetime.now(),
+            "type": "authenticate"
+        }
+
+        conn.rpush('queue:requests', json.dumps(request, default=myconverter))
+        conn.set('audio:{}'.format(request['id']), audio_bytes)
+        print('POST request serviced')
         return render(request, 'login/home.html', {})
+    print('GET request made')
     return render(request, 'login/home.html', {})
 
 
@@ -43,36 +76,4 @@ def events1(request):
             new_Person.save()
             return render(request, 'login/home.html', {})
     return render(request, 'login/register.html', {})
-
-
-def play_audio(blob):
-    #define stream chunk                                                                                               
-    chunk = 1024
-    #print()
-    #f = io.BytesIO(blob)
-
-    #open a wav format music                                                                                           
-    f = wave.open(blob, 'rb')
-    #instantiate PyAudio                                                                                               
-    p = pyaudio.PyAudio()
-    #open stream                                                                                                       
-    stream = p.open(format = p.get_format_from_width(f.getsampwidth()),
-                    channels = f.getnchannels(),
-                    rate = f.getframerate(),
-                    output = True)
-    #read data                                                                                                         
-    data = f.readframes(chunk)
-
-    #play stream                                                                                                       
-    while data:
-        stream.write(data)
-        data = f.readframes(chunk)
-
-    #stop stream                                                                                                       
-    stream.stop_stream()
-    stream.close()
-
-    #close PyAudio                                                                                                     
-    p.terminate()
-    return
 
