@@ -57,9 +57,9 @@ class YoloProcessor:
 
     def _authenticate(self, id_):
         audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
+        U.play_audio(audio_bytes)
         processed_utterance = self.audio_processing(audio_bytes)
         embeddings = self.embedding_processor([processed_utterance])
-        print(embeddings.size())
         self.logger.log(logging.INFO, "Authentication complete for request {}".format(id_))
 
     def _register(self, id_):

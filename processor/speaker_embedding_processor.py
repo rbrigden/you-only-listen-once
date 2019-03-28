@@ -21,7 +21,7 @@ class SpeakerEmbeddingProcessor:
 
 
 def normalize(x, mean, variance):
-    return (x - mean.view(1, -1)) / torch.sqrt(variance.view(1, -1))
+    return (x - mean.reshape(1, -1)) / np.sqrt(variance.reshape(1, -1))
 
 @gin.configurable
 class SpeakerEmbeddingInference:
@@ -55,12 +55,12 @@ def process_data_batch(data_batch, mode='zeros'):
     pad_widths = [max_len - l for l in seq_lens]
 
     if mode == 'zeros':
-        data_batch = sorted(data_batch, key=lambda s: s.size(0), reverse=True)
+        data_batch = sorted(data_batch, key=lambda s: s.shape[0], reverse=True)
         seq_lens = sorted(seq_lens, reverse=True)
         seq_batch = pad_sequence(data_batch, batch_first=True)
     elif mode == 'wrap':
         seq_batch = torch.stack(
-            [torch.FloatTensor(np.pad(x.numpy(), pad_width=((0, w), (0, 0)), mode='wrap')) for w, x in
+            [torch.FloatTensor(np.pad(x, pad_width=((0, w), (0, 0)), mode='wrap')) for w, x in
              zip(pad_widths, data_batch)])
     else:
         raise ValueError("Invalid mode specified")

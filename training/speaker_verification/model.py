@@ -31,7 +31,7 @@ def conv3x3(in_planes, out_planes, stride=1):
 def conv5x5(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=5, stride=stride,
-                     padding=1, bias=False)
+                     padding=2, bias=False)
 
 
 class BasicBlock5x5(nn.Module):
@@ -39,7 +39,7 @@ class BasicBlock5x5(nn.Module):
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock5x5, self).__init__()
-        self.conv1 = conv3x3(inplanes, planes, stride)
+        self.conv1 = conv5x5(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv5x5(planes, planes)
