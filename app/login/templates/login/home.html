@@ -33,8 +33,7 @@
         <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
         <p id = "randphrase"> PlaceHolder </p>
         <div id = "recbuts">
-          <input type = "button" id = "startrec" class = "record" value = "Start Recording"> 
-          <input type = "button" id = "stoprec" name = "stoprec" class = "stop" value = "Stop Recording"> 
+          <input type = "button" id = "startrec" class = "record" value = "Start/Stop">
         </div>
       </div>
       <div id = "recordings">
@@ -53,12 +52,23 @@
         var AudioContext = window.AudioContext || window.webkitAudioContext;
         var audioContext 
         var recordButton = document.getElementById("startrec");
-        var stopButton = document.getElementById("stoprec");
-        recordButton.addEventListener("click", startRecording);
-        stopButton.addEventListener("click", stopRecording);
-        var recording = false;
+        //var stopButton = document.getElementById("stoprec");
+        recordButton.addEventListener("click", start_stop);
+        //stopButton.addEventListener("click", stopRecording);
         
+
+        var start_stop = (function() {
+		var recording = false;
+		return function() {
+		  console.log("in start_stop");
+		  recording ? stopRecording() : startRecording();
+		  recording = !recording;
+		}
+		})();
+
+
         function startRecording() {
+          console.log("IN START RECORDING");
           var constraints = { audio: true, video:false }
           recordButton.disabled = true;
           stopButton.disabled = false;
@@ -118,16 +128,10 @@
           var nameValue = name.value;
           name.value = '';
 
-          //var req = new XMLHttpRequest();
-          //req.open("POST", "/login", true);
-          //req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-          //req.send("name="+nameValue+"&recording="+blob+"&csrfmiddlewaretoken="+getCSRFToken());
-
-
-
           var url = "/login";                                
 		  var formData = new FormData();
 		  formData.append('picture', blob);
+		  formData.append('name', nameValue);
 
 		  $.ajax({
 		      url: url, 
@@ -137,7 +141,6 @@
 		      processData: false,
 		      data: formData})
 		          .done(function(e){
-		              alert('done!');
 		          });
         }
 
