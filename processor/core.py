@@ -6,6 +6,7 @@ import time
 from processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingInference
 from processor.speech_rec_processor import SpeechRecognitionProcessor
+from processor.external import load_voxceleb_embeddings
 from processor.audio_processor import AudioProcessor
 import processor.db as db_core
 import processor.utils as U
@@ -13,12 +14,16 @@ from multiprocessing import Process
 import logging
 from peewee import SqliteDatabase
 import numpy as np
+from io import BytesIO
 
-
+@gin.configurable
 class YoloProcessor:
 
-    def __init__(self, registration_split=3):
+    def __init__(self,
+                 registration_split=3,
+                 load_external=False):
         self.registration_split = registration_split
+        self.load_external = load_external
 
         # self.speaker_classification = SpeakerClassificationProcessor()
         self.embedding_processor = SpeakerEmbeddingProcessor()
@@ -38,6 +43,9 @@ class YoloProcessor:
         # database
         self.db = self._init_db()
 
+        # setup
+        self._setup()
+
 
 
     def run(self):
@@ -51,6 +59,18 @@ class YoloProcessor:
 
             result = self._process(json.loads(request[1].decode('utf-8')))
 
+    def _setup(self):
+        # Load external dataset embeddings
+
+        if not self.redis_conn.exists('external') or self.load_external:
+            external_embeddings = []
+            external_embeddings.append(load_voxceleb_embeddings())
+            external_embeddings = np.concatenate(external_embeddings, axis=0)
+
+            with BytesIO() as b:
+                np.save(b, external_embeddings)
+                serialized_embeddings = b.getvalue()
+            self.redis_conn.set('external', serialized_embeddings)
 
     def _init_db(self):
         db = db_core.get_db_conn()
@@ -94,6 +114,11 @@ class YoloProcessor:
         for i in range(embeddings.shape[0]):
             embedding_data = embeddings[i]
             db_core.create_embedding_record(user=user, embedding=embedding_data, rec_id=request_id)
+
+
+        external_embeddings = self.redis_conn.get('external')
+        external_embeddings = np.load(BytesIO(external_embeddings))
+
         self.logger.log(logging.INFO, "Registration complete for request {}".format(request_id))
 
 
@@ -102,4 +127,10 @@ if __name__ == "__main__":
 
     gin.parse_config_file("processor/config/prod.gin")
     processor = YoloProcessor()
-    processor.run()
+
+    try:
+        processor.run()
+    except KeyboardInterrupt as e:
+        processor.db.close()
+
+    processor.db.close()

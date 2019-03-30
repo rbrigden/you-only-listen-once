@@ -24,6 +24,11 @@ class AudioProcessor:
         mel = librosa.feature.melspectrogram(y=data, sr=sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
         return [mel.T]
 
+    def from_file(self, path):
+        data, sample_rate = librosa.load(path)
+        mel = librosa.feature.melspectrogram(y=data, sr=sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
+        return [mel.T]
+
     def __call__(self, x):
         return self.forward(x)
 
