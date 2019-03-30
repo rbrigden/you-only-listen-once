@@ -12,6 +12,9 @@ from multiprocessing import Process
 import logging
 
 
+
+
+
 class YoloProcessor:
 
     def __init__(self):
@@ -68,18 +71,9 @@ class YoloProcessor:
         self.logger.log(logging.INFO, "Registration complete for request {}".format(id_))
 
 
-
-
-
-
-
-
-
 if __name__ == "__main__":
     gin.external_configurable(redis.Redis, module="redis")
+
     gin.parse_config_file("processor/config/prod.gin")
-
-
     processor = YoloProcessor()
-
     processor.run()
