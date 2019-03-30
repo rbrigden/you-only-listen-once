@@ -20,7 +20,7 @@ class BaseModel(Model):
 
 
 class User(BaseModel):
-    username = CharField(unique=True)
+    username = CharField()
 
 
 class Embedding(BaseModel):
@@ -33,7 +33,7 @@ class Audio(BaseModel):
     embedding = ForeignKeyField(Embedding, unique=True)
 
 
-def create_embedding(user, embedding, rec_id):
+def create_embedding_record(user, embedding, rec_id):
     data = embedding.tostring()
     embedding = Embedding(data=data, user=user)
     embedding.save()

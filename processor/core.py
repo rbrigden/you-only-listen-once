@@ -12,12 +12,14 @@ import processor.utils as U
 from multiprocessing import Process
 import logging
 from peewee import SqliteDatabase
-
+import numpy as np
 
 
 class YoloProcessor:
 
-    def __init__(self):
+    def __init__(self, registration_split=3):
+        self.registration_split = registration_split
+
         # self.speaker_classification = SpeakerClassificationProcessor()
         self.embedding_processor = SpeakerEmbeddingProcessor()
         self.audio_processing = AudioProcessor()
@@ -59,14 +61,15 @@ class YoloProcessor:
     def _process(self, request):
 
         # Parse request data
-        id_ = request["id"]
+        request_id = request["id"]
         request_type = request["type"]
-        self.logger.log(logging.INFO, "{} request {} received".format(request_type, id_))
+        self.logger.log(logging.INFO, "{} request {} received".format(request_type, request_id))
 
         if request_type == "register":
-            self._register(id_)
+            username = request['name']
+            self._register(request_id, username)
         elif request_type == "authenticate":
-            self._authenticate(id_)
+            self._authenticate(request_id)
 
         return request
 
@@ -74,19 +77,24 @@ class YoloProcessor:
         audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
         U.play_audio(audio_bytes)
         processed_utterance = self.audio_processing(audio_bytes)
-        embeddings = self.embedding_processor([processed_utterance])
+        embeddings = self.embedding_processor(processed_utterance)
         self.logger.log(logging.INFO, "Authentication complete for request {}".format(id_))
 
-    def _register(self, id_):
-        audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
-        U.play_audio(audio_bytes)
+    def _register(self, request_id, username):
+        # Add user to the database
+        user = db_core.User(username=username)
+        user.save()
+
+        audio_bytes = self.redis_conn.get('audio:{}'.format(request_id))
         processed_utterances = self.audio_processing(audio_bytes)
-        embeddings = self.embedding_processor([processed_utterances])
+        embeddings = self.embedding_processor(processed_utterances)
 
+        embeddings = embeddings.numpy()
 
-
-
-        self.logger.log(logging.INFO, "Registration complete for request {}".format(id_))
+        for i in range(embeddings.shape[0]):
+            embedding_data = embeddings[i]
+            db_core.create_embedding_record(user=user, embedding=embedding_data, rec_id=request_id)
+        self.logger.log(logging.INFO, "Registration complete for request {}".format(request_id))
 
 
 if __name__ == "__main__":

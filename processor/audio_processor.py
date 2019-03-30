@@ -12,7 +12,9 @@ class AudioProcessor:
         self.num_feats = num_feats
         self.default_sample_rate = sample_rate
 
-    def forward(self, audio_bytes):
+    def forward(self, audio_bytes, split=1):
+        # TODO: Add split logic
+
         audio_stream = io.BytesIO(audio_bytes)
         data, sample_rate = sf.read(audio_stream)
 
@@ -20,7 +22,7 @@ class AudioProcessor:
             sample_rate = self.default_sample_rate
 
         mel = librosa.feature.melspectrogram(y=data, sr=sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
-        return mel.T
+        return [mel.T]
 
     def __call__(self, x):
         return self.forward(x)
