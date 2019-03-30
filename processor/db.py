@@ -1,36 +1,46 @@
 from peewee import *
 import datetime
-from playhouse.mysql_ext import MySQLConnectorDatabase
+import numpy as np
+
+_db = None
 
 
-db = MySQLConnectorDatabase('my_database', host='1.2.3.4', user='mysql')
+def get_db_conn():
+    global _db
+    if _db is None:
+        _db = SqliteDatabase("demo.db")
+        return _db
+    else:
+        return _db
+
 
 class BaseModel(Model):
     class Meta:
-        database = db
+        database = get_db_conn()
 
 
 class User(BaseModel):
-    username = CharField(unique = True)
-    rec_id = IntegerField()
+    username = CharField(unique=True)
 
 
 class Embedding(BaseModel):
-    rec_id = IntegerField()
     data = BlobField()
-    user_id = ForeignKeyField(User, backref='embeddings')
+    user = ForeignKeyField(User, backref='embeddings')
+
 
 class Audio(BaseModel):
-    rec_id = IntegerField()
-    file_id = IntegerField()
-    embedding_id = IntegerField()
+    rec_id = CharField(unique=True)
+    embedding = ForeignKeyField(Embedding, unique=True)
 
 
-db.connect()
-db.create_tables([User, Embedding, Audio])
+def create_embedding(user, embedding, rec_id):
+    data = embedding.tostring()
+    embedding = Embedding(data=data, user=user)
+    embedding.save()
+    audio = Audio(rec_id=rec_id, embedding=embedding)
+    audio.save()
 
-table1 = db['User']
-table.insert(username = 'Huey', rec_id = 3)
 
-for obj in table1:
-    print (obj)
+def load_embedding_data(embedding, dtype=np.float32):
+    return np.fromstring(embedding.data).astype(dtype)
+

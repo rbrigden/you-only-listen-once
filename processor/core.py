@@ -2,23 +2,23 @@ import gin
 import redis
 import json
 import time
-from processor.speaker_classification_processor import SpeakerClassificationProcessor
+# from processor.speaker_classification_processor import SpeakerClassificationProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingInference
 from processor.speech_rec_processor import SpeechRecognitionProcessor
 from processor.audio_processor import AudioProcessor
+import processor.db as db_core
 import processor.utils as U
 from multiprocessing import Process
 import logging
-
-
+from peewee import SqliteDatabase
 
 
 
 class YoloProcessor:
 
     def __init__(self):
-        self.speaker_classification = SpeakerClassificationProcessor()
+        # self.speaker_classification = SpeakerClassificationProcessor()
         self.embedding_processor = SpeakerEmbeddingProcessor()
         self.audio_processing = AudioProcessor()
         self.redis_conn = redis.Redis()
@@ -33,6 +33,11 @@ class YoloProcessor:
         logging.info("Yolo Processor")
         self.logger = logging.getLogger('yoloProcessor')
 
+        # database
+        self.db = self._init_db()
+
+
+
     def run(self):
 
         while True:
@@ -43,6 +48,13 @@ class YoloProcessor:
                 continue
 
             result = self._process(json.loads(request[1].decode('utf-8')))
+
+
+    def _init_db(self):
+        db = db_core.get_db_conn()
+        db.connect()
+        db.create_tables([db_core.User, db_core.Embedding, db_core.Audio])
+        return db
 
     def _process(self, request):
 
@@ -67,7 +79,13 @@ class YoloProcessor:
 
     def _register(self, id_):
         audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
+        U.play_audio(audio_bytes)
         processed_utterances = self.audio_processing(audio_bytes)
+        embeddings = self.embedding_processor([processed_utterances])
+
+
+
+
         self.logger.log(logging.INFO, "Registration complete for request {}".format(id_))
 
 

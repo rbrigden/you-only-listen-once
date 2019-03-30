@@ -49,31 +49,38 @@ def events(request):
         conn = get_redis_conn()
         audio_bytes = request.FILES['picture'].read()
 
-        request = {
+        redis_request = {
             "id": get_unique_id(audio_bytes),
             "timestamp": datetime.now(),
             "type": "authenticate"
         }
 
-        conn.rpush('queue:requests', json.dumps(request, default=myconverter))
-        conn.set('audio:{}'.format(request['id']), audio_bytes)
+        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
+        conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
         print('POST request serviced')
         return render(request, 'login/home.html', {})
     print('GET request made')
     return render(request, 'login/home.html', {})
 
-
+@csrf_exempt
 def events1(request):
-    #if request.method == "POST":
-    print('in events')
-    print(request.method)
     if request.method == "POST":
-        if 'name' in request.POST:
-            print('hello')
-            print(request.POST['name'])
-            print(type(request.POST['recording']))
-            new_Person = Person(name=request.POST['name'], recording=request.POST['recording'])
-            new_Person.save()
-            return render(request, 'login/home.html', {})
+        print("Begin register")
+
+        conn = get_redis_conn()
+        audio_bytes = request.FILES['picture'].read()
+
+        redis_request = {
+            "id": get_unique_id(audio_bytes),
+            "name": request.POST.get('name'),
+            "timestamp": datetime.now(),
+            "type": "register"
+        }
+
+        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
+        conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
+
+        print("Complete register")
+        return render(request, 'login/home.html', {})
     return render(request, 'login/register.html', {})
 
