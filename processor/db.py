@@ -83,6 +83,12 @@ def load_embedding_data(embedding, dtype=np.float32):
     return np.fromstring(embedding.data).astype(dtype)
 
 
+def clear_all_db_records():
+    tables = [SpeakerModel, User, Embedding, Audio]
+    for table in tables:
+        for x in table.select():
+            x.delete_instance()
+
 if __name__ == "__main__":
     db = get_db_conn()
     db.connect()

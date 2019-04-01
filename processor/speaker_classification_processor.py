@@ -7,14 +7,17 @@ import training.speaker_verification.model as models
 import redis
 from io import BytesIO
 import processor.db as db_core
+import logging
 
 
 class SpeakerClassificationProcessor:
 
     def __init__(self):
         self.redis_conn = redis.Redis()
+        self.logger = logging.getLogger('SpeakerClassificationProcessor')
 
-    def add_speaker(self, embeddings, id_):
+
+    def update_speakers(self):
         """ Add speaker to the classification set. Modify self.weights which is (K, D) matrix with weights for each of the K speakers in the database
 
         :param embeddings: (N, D) matrix where N is the number of samples and D is the embedding dimensionality.
@@ -132,8 +135,8 @@ class SpeakerClassificationProcessor:
         targets = []
         for label, model, threshold in zip(user_ids, speaker_models, thresholds):
             prob = model.predict_proba([embedding])[0][1]
-            if prob > threshold:
-                targets.append((label, prob))
+            # if prob > threshold:
+            targets.append((label, prob))
         return targets
 
 
@@ -149,20 +152,17 @@ class SpeakerClassificationProcessor:
         if len(targets) == 1:
             return targets[0]
 
-        maximum = -1.0
-        max_label = None
+        labels, probs = [np.array(x) for x in zip(*targets)]
 
-        every = dict()
-        for label, prob in targets:
-            every[label] = prob
+        new_scores = np.zeros_like(probs)
+        for i in range(probs.shape[0]):
+            mask = np.ones_like(probs)
+            mask[i] = 0
+            mu = (probs * mask).sum() / mask.sum()
+            new_scores[i] = probs[i] / mu
 
-        for label in every:
-            numerator = every[label]
-            del every[label]
-            denom = sum(every.values()) / len(every)
-            arg = numerator / denom
-            if maximum == -1.0 or arg > maximum:
-                maximum = arg
-                max_label = label
-            every[label] = numerator
-        return max_label
+        self.logger.info("Scores: {}".format([(db_core.User.get(db_core.User.id == labels[idx]).username, new_scores[idx]) for idx in range(new_scores.shape[0])]))
+
+        return labels[np.argmax(new_scores)]
+
+

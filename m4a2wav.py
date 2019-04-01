@@ -35,7 +35,6 @@ for filename in os.listdir(folder):
 # Convert m4a extension files to wav extension files
 
 import os
-import argparse
 
 from pydub import AudioSegment
 

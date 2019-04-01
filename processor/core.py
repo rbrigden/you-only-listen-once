@@ -1,6 +1,7 @@
 import gin
 import redis
 import json
+import torch
 import time
 from processor.speaker_classification_processor import SpeakerClassificationProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
@@ -11,6 +12,7 @@ from processor.audio_processor import AudioProcessor
 import processor.db as db_core
 import processor.utils as U
 import sklearn.linear_model
+import os
 
 from multiprocessing import Process
 import logging
@@ -23,7 +25,8 @@ class YoloProcessor:
 
     def __init__(self,
                  registration_split=3,
-                 load_external=False):
+                 load_external=False,
+                 load_fixtures=False):
         self.registration_split = registration_split
         self.load_external = load_external
 
@@ -47,6 +50,39 @@ class YoloProcessor:
 
         # setup
         self._setup()
+
+        # demo fixtures
+        if load_fixtures:
+            db_core.clear_all_db_records()
+            self._add_fixtures("internal_data/")
+
+
+    def _add_fixtures(self, fixtures_path):
+
+        for dirname in os.listdir(fixtures_path):
+            speaker_path = os.path.join(fixtures_path, dirname)
+
+            # Add user to the database
+            user = db_core.User(username=dirname)
+            user.save()
+
+            all_processed_utterances = []
+            rec_ids = []
+            for filename in os.listdir(speaker_path):
+                rec_ids.append(filename)
+                filepath = os.path.join(speaker_path, filename)
+                processed_utterances = self.audio_processing.from_file(filepath)
+                all_processed_utterances.extend(processed_utterances)
+
+            embeddings = self.embedding_processor(all_processed_utterances)
+
+            embeddings = embeddings.numpy()
+
+            for i, rec_id in zip(range(embeddings.shape[0]), rec_ids):
+                embedding_data = embeddings[i]
+                db_core.create_embedding_record(user=user, embedding=embedding_data, rec_id=rec_id)
+
+        self.speaker_classification.update_speakers()
 
 
 
@@ -127,7 +163,7 @@ class YoloProcessor:
             embedding_data = embeddings[i]
             db_core.create_embedding_record(user=user, embedding=embedding_data, rec_id=request_id)
 
-        self.speaker_classification.add_speaker(embeddings, user.id)
+        self.speaker_classification.update_speakers()
 
         self.logger.log(logging.INFO, "Registration complete for request {}".format(request_id))
 
