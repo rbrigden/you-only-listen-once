@@ -10,6 +10,8 @@ from processor.external import load_voxceleb_embeddings
 from processor.audio_processor import AudioProcessor
 import processor.db as db_core
 import processor.utils as U
+import sklearn.linear_model
+
 from multiprocessing import Process
 import logging
 from peewee import SqliteDatabase
@@ -98,7 +100,17 @@ class YoloProcessor:
         U.play_audio(audio_bytes)
         processed_utterance = self.audio_processing(audio_bytes)
         embeddings = self.embedding_processor(processed_utterance)
+        id_decision = self.speaker_classification.classify_speaker(embeddings.squeeze(0).numpy())
+
+        if id_decision is None:
+            user = None
+        else:
+            user = db_core.User.get(db_core.User.id == id_decision)
+
+        self.logger.log(logging.INFO, "Decision is: {}".format("Unknown" if user is None else user.username))
         self.logger.log(logging.INFO, "Authentication complete for request {}".format(id_))
+        return user
+
 
     def _register(self, request_id, username):
         # Add user to the database
@@ -122,6 +134,7 @@ class YoloProcessor:
 
 if __name__ == "__main__":
     gin.external_configurable(redis.Redis, module="redis")
+    gin.external_configurable(sklearn.linear_model.LogisticRegression, module="sklearn.linear_model")
 
     gin.parse_config_file("processor/config/prod.gin")
     processor = YoloProcessor()

@@ -61,8 +61,8 @@ def write_speaker_model(user, lr_model, threshold):
 
 
 def load_speaker_model(user, lr_model):
-    sm = SpeakerModel.get(user == user)
-    coef_data = np.fromstring(sm.coef).astype(np.float32)
+    sm = SpeakerModel.get(SpeakerModel.user == user)
+    coef_data = np.fromstring(sm.coef).astype(np.float32).reshape(1, -1)
     intercept_data = np.fromstring(sm.intercept).astype(np.float32)
     n_iter_data = np.fromstring(sm.n_iter).astype(np.float32)
     lr_model.coef_ = coef_data

@@ -15,3 +15,9 @@ SpeakerEmbeddingInference.stats_path = "data/voxceleb/voxceleb_stats.npy"
 # External loading configuration
 YoloProcessor.load_external = False
 load_voxceleb_embeddings.n = 10000
+
+
+# Logistic Regression
+sklearn.linear_model.LogisticRegression.solver = 'liblinear'
+sklearn.linear_model.LogisticRegression.penalty = 'l2'
+sklearn.linear_model.LogisticRegression.class_weight = 'balanced'

@@ -81,10 +81,14 @@ class SpeakerClassificationProcessor:
         :return: user_id if query has positive result or None for failed identification.
         """
 
-        targets = self.get_target(embedding)
-        if targets == []:
+        users = [user for user in db_core.User.select()]
+        speaker_models, thresholds = zip(*[db_core.load_speaker_model(user, LogisticRegression()) for user in users])
+        user_ids = [user.id for user in users]
+
+        targets = self.get_target(user_ids, speaker_models, thresholds, embedding)
+        if len(targets) == 0:
             return None
-        bestlabel = self.get_argmax_target(embedding, targets)
+        bestlabel = self.get_argmax_target(targets)
         return bestlabel
 
     def getLogisticRegressionParams(self, positives, negatives):
@@ -98,7 +102,7 @@ class SpeakerClassificationProcessor:
         negativeLabels = np.zeros(len(negatives))
         XLab = np.concatenate((positives, negatives), axis=0)
         YLab = np.concatenate((positiveLabels, negativeLabels))
-        f = LogisticRegression(solver='liblinear', penalty='l2', class_weight='balanced').fit(XLab, YLab)
+        f = LogisticRegression().fit(XLab, YLab)
         return f
 
     def get_eer_inputs(self, model, embeddings_val, pos_embeddings):
@@ -119,22 +123,21 @@ class SpeakerClassificationProcessor:
         pos_labels = np.ones_like(pos_probs)
         return np.concatenate([neg_labels, pos_labels]), np.concatenate([neg_probs, pos_probs])
 
-    def get_target(self, embedding):
+    def get_target(self, user_ids, speaker_models, thresholds, embedding):
         """ Get all target labels that pass the EER_threshold by calculating probability using the Logistic Regression model for a particular embedding
 
          :param embedding: D-dimensional embedding vector from speech query
          :return targets: List of possible target labels for a particular embedding
          """
         targets = []
-        for label in self.modeldict:
-            model = self.modeldict[label]
+        for label, model, threshold in zip(user_ids, speaker_models, thresholds):
             prob = model.predict_proba([embedding])[0][1]
-            if (prob > self.threshold_dict[label]):
-                targets.append(label)
+            if prob > threshold:
+                targets.append((label, prob))
         return targets
 
 
-    def get_argmax_target(self, embedding, targets):
+    def get_argmax_target(self, targets):
         """ Gets best target-Label amongst all possible targets that passed the threshold
 
          :param embedding: D-dimensional embedding vector from speech query
@@ -150,9 +153,8 @@ class SpeakerClassificationProcessor:
         max_label = None
 
         every = dict()
-        for label in targets:
-            model = self.modeldict[label]
-            every[label] = model.predict_proba([embedding])[0][1]
+        for label, prob in targets:
+            every[label] = prob
 
         for label in every:
             numerator = every[label]
