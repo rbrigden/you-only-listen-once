@@ -20,10 +20,13 @@
   </head> 
 
   <body>
+		
+	  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300" type="text/css" />
+
       <div id = "buttabs">
         <input type = "button" id = "loginbut" type = "submit" value ="Login" 
-        onclick="location.href='{% url 'events' %}';">
-        <input type = "button" id = "signupbut" type = "submit" onclick="location.href='{% url 'events1' %}';" value = "Register">
+        onclick="location.href='{% url 'events' %}';" class="btn btn-primary btn-lg">
+        <input type = "button" id = "signupbut" type = "submit" onclick="location.href='{% url 'events1' %}';" value = "Register" class="btn btn-primary btn-lg">
       </div>
       <br>
       <!--<div id = "nameInfo">
@@ -34,7 +37,7 @@
         <br>
         <p id = "randphrase"> PlaceHolder </p>
         <div id = "recbuts">
-          <input type = "button" id = "startrec" class = "record" value = "">
+          <input type = "button" id = "startrec1" class = "record" value = "">
         </div>
       </div>
       <div id = "recordings">
@@ -42,6 +45,14 @@
       </div>
 
       <script> 
+
+      	
+
+
+
+
+
+
 
         /*Code for recording from microphone reference: https://addpipe.com/blog/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/ */
 
@@ -52,7 +63,7 @@
         var input;            
         var AudioContext = window.AudioContext || window.webkitAudioContext;
         var audioContext 
-        var recordButton = document.getElementById("startrec");
+        var recordButton = document.getElementById("startrec1");
         //var stopButton = document.getElementById("stoprec");
         recordButton.addEventListener("click", start_stop);
         //stopButton.addEventListener("click", stopRecording);
@@ -141,7 +152,7 @@
           // read text from URL location
           console.log('in start function')
           var request = new XMLHttpRequest();
-          request.open('GET', 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt', true);
+          request.open('GET', 'https://gist.githubusercontent.com/deekayen/4148741/raw/01c6252ccc5b5fb307c1bb899c95989a8a284616/1-1000.txt', true);
           request.send(null);
           request.onreadystatechange = function () {
           	  console.log('in getText')
