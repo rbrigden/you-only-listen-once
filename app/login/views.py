@@ -4,9 +4,6 @@ from __future__ import unicode_literals
 from django.shortcuts import render
 from login.models import Person
 from django.views.decorators.csrf import ensure_csrf_cookie
-import pyaudio
-import wave
-import io
 from django.views.decorators.csrf import csrf_exempt
 import redis
 import hashlib
@@ -44,6 +41,8 @@ def hash_blob(blob):
 # TODO: Will need CSRF for prod
 @csrf_exempt
 def events(request):
+    print('in events')
+    print(request.method)
     if request.method == "POST":
         print('POST request made')
         conn = get_redis_conn()
@@ -83,4 +82,5 @@ def events1(request):
         print("Complete register")
         return render(request, 'login/home.html', {})
     return render(request, 'login/register.html', {})
+
 

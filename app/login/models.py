@@ -8,6 +8,5 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class Person(models.Model):
-	name = models.CharField(max_length = 255)
 	recording = models.FileField(null = True, blank=True)
 

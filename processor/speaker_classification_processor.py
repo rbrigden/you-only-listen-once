@@ -135,8 +135,8 @@ class SpeakerClassificationProcessor:
         targets = []
         for label, model, threshold in zip(user_ids, speaker_models, thresholds):
             prob = model.predict_proba([embedding])[0][1]
-            # if prob > threshold:
-            targets.append((label, prob))
+            if prob > threshold:
+                targets.append((label, prob))
         return targets
 
 
