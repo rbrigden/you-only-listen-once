@@ -54,7 +54,7 @@ body{
 	background-color: #B9F2EB;
 	color: black;
 	width: 540px;
-	height: 450px;
+	height: 650px;
 	text-align: center;
 	margin-left: 450px;
 	font-size: 15pt;
@@ -103,13 +103,14 @@ body{
 }
 
 #startrec{
-    width: 230px;
-    height: 40px;
+    width: 250px;
+    height: 250px;
     margin-top: 70px;
-    background-color: #98F0E1;
+    background: url(http://icons.iconarchive.com/icons/blackvariant/button-ui-requests-15/256/Microphone-icon.png) no-repeat;
+    cursor: pointer;
+    border:none;
     font-size: 20pt;
     color: black;
-    height: 80px;
 }
 
 #startrec:hover{

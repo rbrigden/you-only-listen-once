@@ -30,24 +30,9 @@
       </div>
       <div id = "infoReg">
         <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
-        <p id = "randphraseReg"> Far out in the uncharted backwaters of the unfashionable  end  of
-        the  western  spiral  arm  of  the Galaxy lies a small unregarded
-        yellow sun.
-         
-        Orbiting this at a distance of roughly ninety-two  million  miles
-        is  an  utterly insignificant little blue green planet whose ape-
-        descended life forms are so amazingly primitive that  they  still
-        think digital watches are a pretty neat idea.
-         
-        This planet has - or rather had - a problem, which was this: most
-        of  the  people  on  it were unhappy for pretty much of the time.
-        Many solutions were suggested for this problem, but most of these
-        were  largely  concerned with the movements of small green pieces
-        of paper, which is odd because on the whole it wasn't  the  small
-        green pieces of paper that were unhappy. </p>
+        <p id = "randphraseReg"> Rnaodm </p>
         <div id = "recbuts">
-          <input type = "button" id = "startrec" class = "record" value = "Start Recording"> 
-          <input type = "button" id = "stoprec" name = "stoprec" class = "stop" value = "Stop Recording"> 
+          <input type = "button" id = "startrec" class = "record" value = "">
         </div>
       </div>
       <div id = "recordings">
@@ -66,14 +51,43 @@
         var AudioContext = window.AudioContext || window.webkitAudioContext;
         var audioContext 
         var recordButton = document.getElementById("startrec");
-        var stopButton = document.getElementById("stoprec");
-        recordButton.addEventListener("click", startRecording);
-        stopButton.addEventListener("click", stopRecording);
+        //var stopButton = document.getElementById("stoprec");
+        recordButton.addEventListener("click", start_stop);
+        //stopButton.addEventListener("click", stopRecording);
+
+        window.onload = function() {
+          getText();
+        };
+
+
+        var passageOpts = [
+        'Far out in the uncharted backwaters of the unfashionable  end  of the  western  spiral  arm  of  the Galaxy lies a small unregarded yellow sun. Orbiting this at a distance of roughly ninety-two  million  miles is  an  utterly insignificant little blue green planet whose ape- descended life forms are so amazingly primitive that  they still think digital watches are a pretty neat idea.', 
+         'This planet has - or rather had - a problem, which was this: most of  the  people  on  it were unhappy for pretty much of the time. Many solutions were suggested for this problem, but most of these were  largely  concerned with the movements of small green pieces of paper, which is odd because on the whole it wasnt  the  small green pieces of paper that were unhappy.', 
+        'Many were increasingly of the opinion that theyd all made a  big mistake  in  coming  down  from the trees in the first place. And some said that even the trees had been a bad move,  and  that  no one should ever have left the oceans. And then, one Thursday, nearly two thousand years after  one  man had  been nailed to a tree for saying how great it would be to be nice to people for a change, one girl sitting on  her  own  in  a small  cafe  in  Rickmansworth suddenly realized what it was that had been going wrong all this time, and she finally knew how  the world  could  be  made  a  good and happy place.']
+
+        function getText(){
+          console.log('in gettext register')
+          var item = passageOpts[Math.floor(Math.random()*passageOpts.length)];
+          console.log(item)
+          document.getElementById("randphraseReg").innerHTML = item;
+        }
+
+        var recording = false;
+        function start_stop() {
+          if (recording) {
+            recording = false
+            stopRecording();
+          }
+          else{
+            recording = true;
+            startRecording()
+          }
+
+        }
         
         function startRecording() {
+          console.log("IN START RECORDING");
           var constraints = { audio: true, video:false }
-          recordButton.disabled = true;
-          stopButton.disabled = false;
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             audioContext = new AudioContext();
             gumStream = stream;
@@ -81,18 +95,13 @@
             rec = new Recorder(input,{numChannels:1})
             rec.record()
           }).catch(function(err) {
-              recordButton.disabled = false;
-              stopButton.disabled = true;
           });
         }
 
         function stopRecording() {
-          stopButton.disabled = true;
-          recordButton.disabled = false;
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
           rec.exportWAV(createDownloadLink);
-          alert("Thank you for registering!");
         }
 
         function getCSRFToken() {
@@ -122,34 +131,28 @@
           li.appendChild(link);
           li.appendChild(document.createTextNode (" "))
           console.log(blob);
+          
 
-          var name = document.getElementById("nameInp");
-          var nameValue = name.value;
-          name.value = '';
-        
-
-          // var req = new XMLHttpRequest();
-          // req.open("POST", "/login", true);
-          // req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-          // req.send("name="+nameValue+"&recording="+blob+"&csrfmiddlewaretoken="+getCSRFToken());
+          var url = "/login";                                
+      var formData = new FormData();
+      formData.append('picture', blob);
 
 
-          var url = "/register";
-		  var formData = new FormData();
-		  formData.append('name', nameValue);
-		  formData.append('picture', blob);
+      var url = "/register";
+      var formData = new FormData();
+      formData.append('name', nameValue);
+      formData.append('picture', blob);
 
-		  $.ajax({
-		      url: url,
-		      type: "POST",
-		      cache: false,
-		      contentType: false,
-		      processData: false,
-		      data: formData})
-		          .done(function(e){
-		              alert('done!');
-		          });
-
+      $.ajax({
+          url: url,
+          type: "POST",
+          cache: false,
+          contentType: false,
+          processData: false,
+          data: formData})
+              .done(function(e){
+                  alert('done!');
+              });
         }
 
 
