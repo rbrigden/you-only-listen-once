@@ -22,9 +22,10 @@
   <body>
       <div id = "buttabs">
         <input type = "button" id = "loginbut" type = "submit" value ="Login" 
-        onclick="location.href='{% url 'events' %}';">
-        <input type = "button" id = "signupbut" type = "submit" onclick="location.href='{% url 'events1' %}';" value = "Register">
+        onclick="location.href='{% url 'events' %}';" class="btn btn-primary btn-lg">
+        <input type = "button" id = "signupbut" type = "submit" onclick="location.href='{% url 'events1' %}';" value = "Register" class="btn btn-primary btn-lg">
       </div>
+      <br>
       <div id = "nameInfo">
         <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
       </div>
