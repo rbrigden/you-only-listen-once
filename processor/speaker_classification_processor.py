@@ -62,8 +62,9 @@ class SpeakerClassificationProcessor:
                 np.random.shuffle(internal_train_idxs)
                 internal_embeddings_train = neg_embeddings[internal_train_idxs[held_out_prop:]]
                 internal_embeddings_val = neg_embeddings[internal_train_idxs[:held_out_prop]]
-                embeddings_train = np.concatenate((internal_embeddings_train, external_embeddings_train), axis=0)
-                embeddings_val = np.concatenate((external_embeddings_val, internal_embeddings_val), axis=0)
+                #embeddings_train = np.concatenate((internal_embeddings_train, external_embeddings_train), axis=0)
+                embeddings_train = external_embeddings_train
+                embeddings_val = np.concatenate((internal_embeddings_train, internal_embeddings_val), axis=0)
             else:
                 embeddings_train = external_embeddings_train
                 embeddings_val = external_embeddings_val
@@ -72,8 +73,10 @@ class SpeakerClassificationProcessor:
             eer_labels, scores = self.get_eer_inputs(model, embeddings_val, pos_embeddings)
 
             # Calculate EER and Probability-Threshold for Each Speaker
-            threshold = float((eer.EER(eer_labels, scores)[1]).tolist())
-            db_core.write_speaker_model(db_core.User.get(db_core.User.id == internal_id), model, threshold)
+            eer, threshold = eer.EER(eer_labels, scores)
+            internal_user = db_core.User.get(db_core.User.id == internal_id)
+            self.logger.info("Speaker Model for {}. EER: {}, Thresh: {}".format(internal_user.username, float(eer), float(threshold))
+            db_core.write_speaker_model(internal_user, model, float(threshold))
 
 
     def classify_speaker(self, embedding):
