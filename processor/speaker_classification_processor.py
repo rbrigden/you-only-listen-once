@@ -4,16 +4,15 @@ import training.speaker_verification.eer as eer
 from sklearn.linear_model import LogisticRegression
 from collections import defaultdict
 import training.speaker_verification.model as models
+import redis
+from io import BytesIO
+import processor.db as db_core
+
 
 class SpeakerClassificationProcessor:
 
     def __init__(self):
-
-        self.weights = []
-        self.labeldict = defaultdict(list)
-        self.traindict = defaultdict(list)
-        self.helddict = defaultdict(list)
-        self.threshold_dict = defaultdict(list)
+        self.redis_conn = redis.Redis()
 
     def add_speaker(self, embeddings, id_):
         """ Add speaker to the classification set. Modify self.weights which is (K, D) matrix with weights for each of the K speakers in the database
@@ -24,28 +23,55 @@ class SpeakerClassificationProcessor:
         :return: None
         """
 
-        for index in embeddings:
-            self.labeldict[id_].append(embeddings[index])
+        # TODO: Uses stats.npy to normalize the embeddings
 
-        # Split Training/Held-Out 80-20
-        train_index = int(len(self.labeldict[id_]) * 0.8)
-        self.traindict[id_] = self.labeldict[id_][:train_index]
-        self.helddict[id_] = self.labeldict[id_][train_index:]
-      
+        internal_emb = defaultdict(list)
+
+
+        # Load external embeddings
+        external_embeddings = self.redis_conn.get('external')
+        external_embeddings = np.load(BytesIO(external_embeddings))
+
+        # Split the external embeddings
+        held_out_prop = int(0.2 * len(external_embeddings))
+        external_train_idxs = np.arange(len(external_embeddings))
+        np.random.shuffle(external_train_idxs)
+        external_embeddings_train = external_embeddings[external_train_idxs[held_out_prop:]]
+        external_embeddings_val = external_embeddings[external_train_idxs[:held_out_prop]]
+
+        for user in db_core.User.select():
+            for embedding in user.embeddings:
+                internal_emb[user.id].append(db_core.load_embedding_data(embedding, dtype=np.float64))
+
         self.modeldict = defaultdict(list)
-        # Train Logistic Regression Parameters for Each Speaker  
-        for label in self.traindict:
-            target = self.traindict[label]
-            del self.traindict[label]
-            self.modeldict[label]  = self.getLogisticRegressionParams(target)
-            self.traindict[label] = target
 
-        # Get EER and Threshold for Each Speaker
-        for label in self.modeldict:
-            eer_labels, scores = self.get_eer_inputs(self.modeldict[label], label)
-        
+        for internal_id, internal_embeddings in internal_emb.items():
+            neg_embeddings = [other_embeddings for other_id, other_embeddings in internal_emb.items() if
+                              internal_id != other_id]
+            pos_embeddings = np.stack(internal_embeddings)
+
+            if len(neg_embeddings) >= 5:
+                neg_embeddings = np.concatenate([np.stack(x) for x in neg_embeddings], axis=0)
+
+                # Split the internal embeddings
+                held_out_prop = int(0.2 * len(neg_embeddings))
+                internal_train_idxs = np.arange(len(neg_embeddings))
+                np.random.shuffle(internal_train_idxs)
+                internal_embeddings_train = neg_embeddings[internal_train_idxs[held_out_prop:]]
+                internal_embeddings_val = neg_embeddings[internal_train_idxs[:held_out_prop]]
+                embeddings_train = np.concatenate((internal_embeddings_train, external_embeddings_train), axis=0)
+                embeddings_val = np.concatenate((external_embeddings_val, internal_embeddings_val), axis=0)
+            else:
+                embeddings_train = external_embeddings_train
+                embeddings_val = external_embeddings_val
+
+            model = self.getLogisticRegressionParams(pos_embeddings, embeddings_train)
+            eer_labels, scores = self.get_eer_inputs(model, embeddings_val, pos_embeddings)
+
             # Calculate EER and Probability-Threshold for Each Speaker
-            self.threshold_dict[label] = float((eer.EER(eer_labels, scores)[1]).tolist())
+            threshold = float((eer.EER(eer_labels, scores)[1]).tolist())
+            db_core.write_speaker_model(db_core.User.get(db_core.User.id == internal_id), model, threshold)
+
 
     def classify_speaker(self, embedding):
         """ Classify speech query
@@ -54,37 +80,28 @@ class SpeakerClassificationProcessor:
 
         :return: user_id if query has positive result or None for failed identification.
         """
-        
-        
+
         targets = self.get_target(embedding)
         if targets == []:
             return None
         bestlabel = self.get_argmax_target(embedding, targets)
         return bestlabel
-        
 
-    def getLogisticRegressionParams(self, target):
+    def getLogisticRegressionParams(self, positives, negatives):
         """ Train for Each Speaker vs Rest-Of-Speakers. One vs Rest Binary Classification
 
         :param target: (Z, D) matrix which contains Z D-dimensional embeddings for Z utterances ofpostive-Labeled speaker that is to be classified 
         :return: Logistic Regression model for target-speaker
         """
 
-        positiveLabels = np.ones(len(target))
-        target = np.asarray(target)
-        negatives = []
-        for label in self.traindict:
-            negatives.append(self.traindict[label])
-        n = np.asarray(negatives[0])
-        for i in range(1, len(negatives)):
-            n = np.concatenate((n, negatives[i]), axis = 0)
-        negativeLabels = np.zeros(len(n))
-        XLab = np.concatenate((target, n), axis = 0)
-        YLab = np.concatenate((postiveLabels, negativesLabels))
-        f = LogisticRegression(solver = 'liblinear', penalty = 'l2', class_weight = 'balanced').fit(XLab, YLab)
-        return f 
+        positiveLabels = np.ones(len(positives))
+        negativeLabels = np.zeros(len(negatives))
+        XLab = np.concatenate((positives, negatives), axis=0)
+        YLab = np.concatenate((positiveLabels, negativeLabels))
+        f = LogisticRegression(solver='liblinear', penalty='l2', class_weight='balanced').fit(XLab, YLab)
+        return f
 
-    def get_err_inputs(self, model, target_label):
+    def get_eer_inputs(self, model, embeddings_val, pos_embeddings):
         """ For a particular model, get list of EER labels and scores to pass into EER function
 
         :param model: Logistic Regression model for target-Speaker
@@ -95,46 +112,43 @@ class SpeakerClassificationProcessor:
         :list scores: Probability Scores for all Speakers on target-Model
 
         """
-        eer_labels = scores = []
-        for label in self.helddict:
-            res = list(map(lambda x: model.predict_proba([x])[0][1], self.helddict[label]))
-            scores.extend(res)
-            if label == target_label:
-                eer_labels.extend([1] * len(res))
-            else:
-                eer_labels.extend([0] * len(res))
-        return eer_labels, scores
+        neg_probs = list(map(lambda x: model.predict_proba([x])[0][1], embeddings_val))
+        neg_labels = np.zeros_like(neg_probs)
 
-    
-    def get_target(embedding):
-       """ Get all target labels that pass the EER_threshold by calculating probability using the Logistic Regression model for a particular embedding
+        pos_probs = list(map(lambda x: model.predict_proba([x])[0][1], pos_embeddings))
+        pos_labels = np.ones_like(pos_probs)
+        return np.concatenate([neg_labels, pos_labels]), np.concatenate([neg_probs, pos_probs])
 
-        :param embedding: D-dimensional embedding vector from speech query
-        :return targets: List of possible target labels for a particular embedding
-        """ 
+    def get_target(self, embedding):
+        """ Get all target labels that pass the EER_threshold by calculating probability using the Logistic Regression model for a particular embedding
+
+         :param embedding: D-dimensional embedding vector from speech query
+         :return targets: List of possible target labels for a particular embedding
+         """
         targets = []
         for label in self.modeldict:
-            model = modeldict[label]
+            model = self.modeldict[label]
             prob = model.predict_proba([embedding])[0][1]
             if (prob > self.threshold_dict[label]):
                 targets.append(label)
         return targets
 
-    
-    def get_argmax_target(embedding, targets):
-       """ Gets best target-Label amongst all possible targets that passed the threshold
 
-        :param embedding: D-dimensional embedding vector from speech query
-        :param targets: Possible target labels to get argmax probability from
+    def get_argmax_target(self, embedding, targets):
+        """ Gets best target-Label amongst all possible targets that passed the threshold
 
-        :return max_label: Target Label with best Argmax Probability
-        """ 
+         :param embedding: D-dimensional embedding vector from speech query
+         :param targets: Possible target labels to get argmax probability from
+
+         :return max_label: Target Label with best Argmax Probability
+         """
 
         if len(targets) == 1:
             return targets[0]
+
         maximum = -1.0
         max_label = None
-    
+
         every = dict()
         for label in targets:
             model = self.modeldict[label]
@@ -143,14 +157,10 @@ class SpeakerClassificationProcessor:
         for label in every:
             numerator = every[label]
             del every[label]
-            denom = sum(every.values.())/len(every)
-            arg = numerator/denom
-            if (maximum == -1.0 or arg > maximum):
+            denom = sum(every.values()) / len(every)
+            arg = numerator / denom
+            if maximum == -1.0 or arg > maximum:
                 maximum = arg
                 max_label = label
             every[label] = numerator
         return max_label
-        
-
-
-        

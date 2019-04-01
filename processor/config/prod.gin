@@ -13,5 +13,5 @@ load_voxceleb_embeddings.voxceleb_wav_path = "/home/rbrigden/voxceleb/wav"
 SpeakerEmbeddingInference.stats_path = "data/voxceleb/voxceleb_stats.npy"
 
 # External loading configuration
-YoloProcessor.load_external = True
+YoloProcessor.load_external = False
 load_voxceleb_embeddings.n = 10000

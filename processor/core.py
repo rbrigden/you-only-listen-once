@@ -2,7 +2,7 @@ import gin
 import redis
 import json
 import time
-# from processor.speaker_classification_processor import SpeakerClassificationProcessor
+from processor.speaker_classification_processor import SpeakerClassificationProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingInference
 from processor.speech_rec_processor import SpeechRecognitionProcessor
@@ -25,7 +25,7 @@ class YoloProcessor:
         self.registration_split = registration_split
         self.load_external = load_external
 
-        # self.speaker_classification = SpeakerClassificationProcessor()
+        self.speaker_classification = SpeakerClassificationProcessor()
         self.embedding_processor = SpeakerEmbeddingProcessor()
         self.audio_processing = AudioProcessor()
         self.redis_conn = redis.Redis()
@@ -75,7 +75,7 @@ class YoloProcessor:
     def _init_db(self):
         db = db_core.get_db_conn()
         db.connect()
-        db.create_tables([db_core.User, db_core.Embedding, db_core.Audio])
+        db.create_tables([db_core.User, db_core.Embedding, db_core.Audio, db_core.SpeakerModel])
         return db
 
     def _process(self, request):
@@ -115,9 +115,7 @@ class YoloProcessor:
             embedding_data = embeddings[i]
             db_core.create_embedding_record(user=user, embedding=embedding_data, rec_id=request_id)
 
-
-        external_embeddings = self.redis_conn.get('external')
-        external_embeddings = np.load(BytesIO(external_embeddings))
+        self.speaker_classification.add_speaker(embeddings, user.id)
 
         self.logger.log(logging.INFO, "Registration complete for request {}".format(request_id))
 
