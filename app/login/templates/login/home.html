@@ -26,14 +26,15 @@
         <input type = "button" id = "signupbut" type = "submit" onclick="location.href='{% url 'events1' %}';" value = "Register">
       </div>
       <br>
-      <div id = "nameInfo">
+      <!--<div id = "nameInfo">
 		<input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
-      </div>
+      </div>-->
       <div id = "info">
         <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
+        <br>
         <p id = "randphrase"> PlaceHolder </p>
         <div id = "recbuts">
-          <input type = "button" id = "startrec" class = "record" value = "Start/Stop">
+          <input type = "button" id = "startrec" class = "record" value = "">
         </div>
       </div>
       <div id = "recordings">
@@ -55,23 +56,23 @@
         //var stopButton = document.getElementById("stoprec");
         recordButton.addEventListener("click", start_stop);
         //stopButton.addEventListener("click", stopRecording);
-        
 
-        var start_stop = (function() {
 		var recording = false;
-		return function() {
-		  console.log("in start_stop");
-		  recording ? stopRecording() : startRecording();
-		  recording = !recording;
-		}
-		})();
+		function start_stop() {
+			if (recording) {
+				recording = false
+				stopRecording();
+			}
+			else{
+				recording = true;
+				startRecording()
+			}
 
+		}
 
         function startRecording() {
           console.log("IN START RECORDING");
           var constraints = { audio: true, video:false }
-          recordButton.disabled = true;
-          stopButton.disabled = false;
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             audioContext = new AudioContext();
             gumStream = stream;
@@ -79,8 +80,6 @@
             rec = new Recorder(input,{numChannels:1})
             rec.record()
           }).catch(function(err) {
-              recordButton.disabled = false;
-              stopButton.disabled = true;
           });
         }
 
@@ -89,8 +88,6 @@
         };
 
         function stopRecording() {
-          stopButton.disabled = true;
-          recordButton.disabled = false;
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
           rec.exportWAV(createDownloadLink);
@@ -124,14 +121,10 @@
           li.appendChild(document.createTextNode (" "))
           console.log(blob);
           
-          var name = document.getElementById("nameInp");
-          var nameValue = name.value;
-          name.value = '';
 
           var url = "/login";                                
 		  var formData = new FormData();
 		  formData.append('picture', blob);
-		  formData.append('name', nameValue);
 
 		  $.ajax({
 		      url: url, 
@@ -146,13 +139,16 @@
 
         function getText(){
           // read text from URL location
+          console.log('in start function')
           var request = new XMLHttpRequest();
           request.open('GET', 'https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt', true);
           request.send(null);
           request.onreadystatechange = function () {
+          	  console.log('in getText')
               if (request.readyState === 4 && request.status === 200) {
                   var type = request.getResponseHeader('Content-Type');
                   if (type.indexOf("text") !== 1) {
+                  	  console.log('in second IF')
                       text = request.responseText;
                       text = text.split('\n');
                       length_array = text.length;

@@ -1,4 +1,12 @@
-
+import training.speaker_verification.model
 
 redis.Redis.port = 6379
 redis.Redis.host = "127.0.0.1"
+
+SpeakerEmbeddingProcessor.model_cls = @training.speaker_verification.model.IdentifyAndEmbed
+SpeakerEmbeddingProcessor.checkpoint_path = "models/verification/production_baseline.pt"
+
+training.speaker_verification.model.IdentifyAndEmbed.nspeakers = 1200
+
+
+SpeakerEmbeddingInference.stats_path = "data/voxceleb/voxceleb_stats.npy"
