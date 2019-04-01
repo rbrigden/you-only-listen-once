@@ -94,10 +94,10 @@ class VoxcelebID(Dataset):
 
 
 def voxceleb_sample_normalize(x):
-    stats_path = "data/voxceleb/voxceleb_stats.npy"
-    mean, variance, _ = np.load(stats_path)
-    mean, variance = torch.FloatTensor(mean), torch.FloatTensor(variance)
-    return (x - mean.view(1, -1)) / torch.sqrt(variance.view(1, -1))
+    stats_path = "data/voxceleb/voxceleb_stats_16k.npy"
+    mean, std = np.load(stats_path)
+    mean, std = torch.FloatTensor(mean), torch.FloatTensor(std)
+    return (x - mean.view(1, -1)) / std.view(1, -1)
 
 
 def voxceleb_collate(batch):

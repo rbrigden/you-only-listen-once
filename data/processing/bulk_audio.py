@@ -9,14 +9,15 @@ import ray
 
 @ray.remote
 def process_with_mfcc(wav_path, out_path, sample_rate):
-    y, sr = librosa.load(wav_path, sr = sample_rate)
+    y, sr = librosa.load(wav_path, sr=sample_rate)
     mfcc = librosa.feature.mfcc(y=y, sr=sample_rate, dct_type=2, n_mfcc=64, norm='ortho')
     np.save(out_path, mfcc)
 
 @ray.remote
 def process_with_mel(wav_path, out_path, sample_rate):
     # TODO: Standardize sr across dataset
-    y, sr = librosa.load(wav_path, sr=sample_rate)
+    y, sr = librosa.load(wav_path)
+    print(sr)
     mel = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=2048, n_mels=64)
     assert mel.shape[0] == 64
     np.save(out_path, mel)

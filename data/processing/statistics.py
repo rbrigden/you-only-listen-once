@@ -1,6 +1,6 @@
 import numpy as np
 import argparse
-from data.processing.audio import WavDataset
+from data.processing.audio import WavDataset, ProcessedDataset
 import torch.utils.data as data
 import os
 import ray
@@ -30,8 +30,8 @@ def collate(batch):
     return [data, ]
 
 def compute_statistics(file_paths, feats=64):
-    dset = WavDataset(file_paths)
-    loader = data.DataLoader(dset, batch_size=200, shuffle=False, num_workers=15, collate_fn=collate)
+    dset = ProcessedDataset(file_paths)
+    loader = data.DataLoader(dset, batch_size=200, shuffle=False, num_workers=18, collate_fn=collate)
     aggregate = (0, np.zeros(feats,), np.zeros(feats,))
 
     num_batches = len(dset) // 200
@@ -40,7 +40,7 @@ def compute_statistics(file_paths, feats=64):
     for idx, (utterance_batch,) in enumerate(loader):
         for u in utterance_batch:
             for t in range(u.shape[0]):
-                aggregate = welford_update(aggregate, u[t].numpy().reshape((feats,)))
+                aggregate = welford_update(aggregate, u.t()[t].numpy().reshape((feats,)))
         print("idx = {} / {}".format(idx, num_batches))
     mean, variance, sampleVariance = finalize(aggregate)
     return [mean, np.sqrt(variance)]
