@@ -138,14 +138,21 @@
       var formData = new FormData();
       formData.append('picture', blob);
 
+
+      var url = "/register";
+      var formData = new FormData();
+      formData.append('name', nameValue);
+      formData.append('picture', blob);
+
       $.ajax({
-          url: url, 
-          type: "POST", 
+          url: url,
+          type: "POST",
           cache: false,
           contentType: false,
           processData: false,
           data: formData})
               .done(function(e){
+                  alert('done!');
               });
         }
 

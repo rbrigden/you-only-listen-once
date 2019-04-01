@@ -114,7 +114,7 @@ class IdentifyAndEmbed(nn.Module):
         # out *= mask
         out = self.pool(out)
         z = self.embedding(out)
-        z = 16 * nn.functional.normalize(z, p=2, dim=1)
+        z = 10 * nn.functional.normalize(z, p=2, dim=1)
         # z = F.elu(z, inplace=True)
         if em:
             return z

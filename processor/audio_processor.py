@@ -1,7 +1,10 @@
 import soundfile as sf
-import librosa
 import io
+import logging
+import gin
+import librosa
 
+@gin.configurable
 class AudioProcessor:
 
     def __init__(self,
@@ -11,16 +14,42 @@ class AudioProcessor:
         self.window_size = window_size
         self.num_feats = num_feats
         self.default_sample_rate = sample_rate
+        self.logger = logging.getLogger('audioProcessor')
 
-    def forward(self, audio_bytes):
+    def forward(self, audio_bytes, split=1):
+        # TODO: Add split logic
+
         audio_stream = io.BytesIO(audio_bytes)
-        data, sample_rate = sf.read(audio_stream)
+        data, source_sample_rate = sf.read(audio_stream)
+
+        self.logger.info("Source sample rate is {}".format(source_sample_rate))
 
         if self.default_sample_rate is not None:
-            sample_rate = self.default_sample_rate
+            target_sample_rate = self.default_sample_rate
+            data = librosa.resample(data, orig_sr=source_sample_rate, target_sr=target_sample_rate)
+        else:
+            target_sample_rate = source_sample_rate
 
-        mel = librosa.feature.melspectrogram(y=data, sr=sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
-        return mel.T
+        self.logger.info("Target sample rate is {}".format(target_sample_rate))
+
+        mel = librosa.feature.melspectrogram(y=data, sr=target_sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
+        return [mel.T]
+
+    def from_file(self, path):
+        data, source_sample_rate = librosa.load(path)
+
+        self.logger.info("Source sample rate is {}".format(source_sample_rate))
+
+        if self.default_sample_rate is not None:
+            target_sample_rate = self.default_sample_rate
+            data = librosa.resample(data, orig_sr=source_sample_rate, target_sr=target_sample_rate)
+        else:
+            target_sample_rate = source_sample_rate
+
+        self.logger.info("Target sample rate is {}".format(target_sample_rate))
+
+        mel = librosa.feature.melspectrogram(y=data, sr=target_sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
+        return [mel.T]
 
     def __call__(self, x):
         return self.forward(x)

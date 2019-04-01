@@ -8,9 +8,9 @@ import gin
 @gin.configurable
 class SpeakerEmbeddingProcessor:
 
-    def __init__(self, model_cls, checkpoint_path):
+    def __init__(self, model_cls, checkpoint_path, use_gpu=False):
         self.embedding_model = model_cls()
-        self.inference_engine = SpeakerEmbeddingInference(self.embedding_model)
+        self.inference_engine = SpeakerEmbeddingInference(self.embedding_model, use_gpu=use_gpu)
         self.inference_engine.load_params(checkpoint_path)
 
     def forward(self, spect_batch):
@@ -26,10 +26,10 @@ def normalize(x, mean, variance):
 @gin.configurable
 class SpeakerEmbeddingInference:
 
-    def __init__(self, model, stats_path):
+    def __init__(self, model, stats_path, use_gpu=False):
         self.mean, self.variance, _ = np.load(stats_path)
-        self.model = model
-
+        self.model = model.cuda() if use_gpu else model
+        self.use_gpu = use_gpu
 
     def forward(self, utterance_batch):
         """ Compute utterances
@@ -39,9 +39,10 @@ class SpeakerEmbeddingInference:
         self.model.eval()
         utterance_batch = [normalize(u, self.mean, self.variance) for u in utterance_batch]
         seq_batch, seq_lens = process_data_batch(utterance_batch, mode="wrap")
+        seq_batch = seq_batch.cuda() if self.use_gpu else seq_batch
         with torch.no_grad():
             embeddings = self.model([seq_batch, seq_lens], em=True)
-        return embeddings
+        return embeddings.cpu()
 
     def load_params(self, checkpoint_path):
         cpd = torch.load(checkpoint_path, map_location=lambda storage, loc: storage)

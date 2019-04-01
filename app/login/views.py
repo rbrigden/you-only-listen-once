@@ -5,8 +5,8 @@ from django.shortcuts import render
 from login.models import Person
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.csrf import csrf_exempt
-#import redis
-#import hashlib
+import redis
+import hashlib
 from datetime import datetime
 import json
 
@@ -44,36 +44,43 @@ def events(request):
     print('in events')
     print(request.method)
     if request.method == "POST":
-        new_Person = Person(recording=request.FILES['picture'])
-        new_Person.save()
-        
-        #print('POST request made')
-        #conn = get_redis_conn()
-        #audio_bytes = request.FILES['picture'].read()
+        print('POST request made')
+        conn = get_redis_conn()
+        audio_bytes = request.FILES['picture'].read()
 
-        #request = {
-        #    "id": get_unique_id(audio_bytes),
-        #    "timestamp": datetime.now(),
-        #    "type": "authenticate"
-        #}
+        redis_request = {
+            "id": get_unique_id(audio_bytes),
+            "timestamp": datetime.now(),
+            "type": "authenticate"
+        }
 
-        #conn.rpush('queue:requests', json.dumps(request, default=myconverter))
-        #conn.set('audio:{}'.format(request['id']), audio_bytes)
-        #print('POST request serviced')
+        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
+        conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
+        print('POST request serviced')
         return render(request, 'login/home.html', {})
     print('GET request made')
     return render(request, 'login/home.html', {})
 
-
+@csrf_exempt
 def events1(request):
-
-    print('in events')
-    print(request.method)
     if request.method == "POST":
-        print(request.POST['name'])
-        new_Person = Person(recording=request.FILES['picture'])
-        new_Person.save()
-        return render(request, 'login/register.html', {})
+        print("Begin register")
+
+        conn = get_redis_conn()
+        audio_bytes = request.FILES['picture'].read()
+
+        redis_request = {
+            "id": get_unique_id(audio_bytes),
+            "name": request.POST.get('name'),
+            "timestamp": datetime.now(),
+            "type": "register"
+        }
+
+        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
+        conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
+
+        print("Complete register")
+        return render(request, 'login/home.html', {})
     return render(request, 'login/register.html', {})
 
 
