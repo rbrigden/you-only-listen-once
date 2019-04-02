@@ -143,6 +143,9 @@ class YoloProcessor:
         else:
             user = db_core.User.get(db_core.User.id == id_decision)
 
+        # Send the result to the client
+        self.redis_conn.set("result:{}".format(id_), user.username)
+
         self.logger.log(logging.INFO, "Decision is: {}".format("Unknown" if user is None else user.username))
         self.logger.log(logging.INFO, "Authentication complete for request {}".format(id_))
         return user
