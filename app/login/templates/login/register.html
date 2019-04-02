@@ -132,29 +132,27 @@
           li.appendChild(link);
           li.appendChild(document.createTextNode (" "))
           console.log(blob);
-          
 
-          var url = "/login";                                
-      var formData = new FormData();
-      formData.append('picture', blob);
+          var name = document.getElementById("nameInp");
+          var nameValue = name.value;
+          name.value = '';
 
+          var url = "/register";
+          var formData = new FormData();
+          formData.append('name', nameValue);
+          formData.append('picture', blob);
 
-      var url = "/register";
-      var formData = new FormData();
-      formData.append('name', nameValue);
-      formData.append('picture', blob);
-
-      $.ajax({
-          url: url,
-          type: "POST",
-          cache: false,
-          contentType: false,
-          processData: false,
-          data: formData})
-              .done(function(e){
-                  alert('done!');
-              });
-        }
+          $.ajax({
+              url: url,
+              type: "POST",
+              cache: false,
+              contentType: false,
+              processData: false,
+              data: formData})
+                  .done(function(e){
+                      alert('done!');
+                  });
+            }
 
 
 
