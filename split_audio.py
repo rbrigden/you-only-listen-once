@@ -14,7 +14,7 @@ if __name__ == '__main__':
     splits = np.cumsum([0] + [int(duration_ms) // args.n for _ in range(args.n)])
     segments = [newAudio[splits[i]:splits[i+1]] for i in range(len(splits) - 1)]
     path = os.path.splitext(args.src)[0]
-    outpaths = ["{}{}.wav".format(path, i) for i in range(args.n)]
+    outpaths = ["{}_{:03d}.wav".format(path, i) for i in range(args.n)]
 
     for outpath, segment in zip(outpaths, segments):
         segment.export(outpath, format="wav")

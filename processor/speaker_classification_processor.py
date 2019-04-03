@@ -1,13 +1,14 @@
 import torch
 import numpy as np
 import training.speaker_verification.eer as eer
-from sklearn.linear_model import LogisticRegression
+import sklearn.linear_model
 from collections import defaultdict
 import training.speaker_verification.model as models
 import redis
 from io import BytesIO
 import processor.db as db_core
 import logging
+import gin
 
 
 class SpeakerClassificationProcessor:
@@ -57,14 +58,14 @@ class SpeakerClassificationProcessor:
                 neg_embeddings = np.concatenate([np.stack(x) for x in neg_embeddings], axis=0)
 
                 # Split the internal embeddings
-                held_out_prop = int(0.2 * len(neg_embeddings))
+                held_out_prop = int(0.1 * len(neg_embeddings))
                 internal_train_idxs = np.arange(len(neg_embeddings))
                 np.random.shuffle(internal_train_idxs)
                 internal_embeddings_train = neg_embeddings[internal_train_idxs[held_out_prop:]]
                 internal_embeddings_val = neg_embeddings[internal_train_idxs[:held_out_prop]]
-                #embeddings_train = np.concatenate((internal_embeddings_train, external_embeddings_train), axis=0)
-                embeddings_train = external_embeddings_train
-                embeddings_val = np.concatenate((internal_embeddings_train, internal_embeddings_val), axis=0)
+                embeddings_train = np.concatenate((internal_embeddings_train, external_embeddings_train), axis=0)
+                # embeddings_train = external_embeddings_train
+                embeddings_val = np.concatenate((external_embeddings_val, internal_embeddings_val), axis=0)
             else:
                 embeddings_train = external_embeddings_train
                 embeddings_val = external_embeddings_val
@@ -73,9 +74,9 @@ class SpeakerClassificationProcessor:
             eer_labels, scores = self.get_eer_inputs(model, embeddings_val, pos_embeddings)
 
             # Calculate EER and Probability-Threshold for Each Speaker
-            eer, threshold = eer.EER(eer_labels, scores)
+            eer_, threshold = eer.EER(eer_labels, scores)
             internal_user = db_core.User.get(db_core.User.id == internal_id)
-            self.logger.info("Speaker Model for {}. EER: {}, Thresh: {}".format(internal_user.username, float(eer), float(threshold))
+            self.logger.info("Speaker Model for {}. EER: {}, Thresh: {}".format(internal_user.username, float(eer_), float(threshold)))
             db_core.write_speaker_model(internal_user, model, float(threshold))
 
 
@@ -88,14 +89,17 @@ class SpeakerClassificationProcessor:
         """
 
         users = [user for user in db_core.User.select()]
-        speaker_models, thresholds = zip(*[db_core.load_speaker_model(user, LogisticRegression()) for user in users])
+        speaker_models, thresholds = zip(*[db_core.load_speaker_model(user, sklearn.linear_model.LogisticRegression(solver='liblinear', class_weight='balanced')) for user in users])
         user_ids = [user.id for user in users]
 
         targets = self.get_target(user_ids, speaker_models, thresholds, embedding)
         if len(targets) == 0:
             return None
-        bestlabel = self.get_argmax_target(targets)
-        return bestlabel
+
+        return max(targets, key=lambda x: x[1])[0]
+
+        # bestlabel = self.get_argmax_target(targets)
+        # return bestlabel
 
     def getLogisticRegressionParams(self, positives, negatives):
         """ Train for Each Speaker vs Rest-Of-Speakers. One vs Rest Binary Classification
@@ -108,7 +112,7 @@ class SpeakerClassificationProcessor:
         negativeLabels = np.zeros(len(negatives))
         XLab = np.concatenate((positives, negatives), axis=0)
         YLab = np.concatenate((positiveLabels, negativeLabels))
-        f = LogisticRegression().fit(XLab, YLab)
+        f = sklearn.linear_model.LogisticRegression(solver='liblinear', class_weight='balanced').fit(XLab, YLab)
         return f
 
     def get_eer_inputs(self, model, embeddings_val, pos_embeddings):
@@ -138,6 +142,7 @@ class SpeakerClassificationProcessor:
         targets = []
         for label, model, threshold in zip(user_ids, speaker_models, thresholds):
             prob = model.predict_proba([embedding])[0][1]
+            self.logger.info("P({}) {}".format(db_core.User.get(db_core.User.id == label).username, prob))
             if prob > threshold:
                 targets.append((label, prob))
         return targets
@@ -153,7 +158,7 @@ class SpeakerClassificationProcessor:
          """
 
         if len(targets) == 1:
-            return targets[0]
+            return targets[0][0]
 
         labels, probs = [np.array(x) for x in zip(*targets)]
 
@@ -164,8 +169,56 @@ class SpeakerClassificationProcessor:
             mu = (probs * mask).sum() / mask.sum()
             new_scores[i] = probs[i] / mu
 
+        self.logger.info("Probs: {}".format([(db_core.User.get(db_core.User.id == labels[idx]).username, probs[idx]) for idx in range(probs.shape[0])]))
         self.logger.info("Scores: {}".format([(db_core.User.get(db_core.User.id == labels[idx]).username, new_scores[idx]) for idx in range(new_scores.shape[0])]))
+
 
         return labels[np.argmax(new_scores)]
 
+@gin.configurable
+def main(mode):
+    if mode == "plot_embeddings":
+        from inference.demo import plot_embeddings
+        import matplotlib.pyplot as plt
+        embeddings = []
+        labels = []
+        for user in db_core.User.select():
+            for embedding in user.embeddings:
+                embeddings.append(db_core.load_embedding_data(embedding, dtype=np.float64))
+                labels.append(user.username)
+        embeddings = np.stack(embeddings)
+        plot_embeddings(embeddings, labels)
+        plt.savefig("internal_embeddings.png")
+    elif mode == "retrain_speaker_models":
+        sc = SpeakerClassificationProcessor()
+        sc.update_speakers()
+    else:
+        raise ValueError("Invalid mode specified")
 
+
+
+if __name__ == '__main__':
+    import sklearn.linear_model
+
+    import processor.db as db_core
+    import processor.utils as U
+    import sklearn.linear_model
+    import os
+
+
+    gin.external_configurable(redis.Redis, module="redis")
+    gin.external_configurable(sklearn.linear_model.LogisticRegression)
+
+    gin.parse_config_file("processor/config/speaker_classification.gin")
+    # Set up processor logging
+    logging.basicConfig(filename='yolo_processor.log',
+                        filemode='a',
+                        format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                        datefmt='%H:%M:%S',
+                        level=logging.DEBUG)
+
+
+    db = db_core.get_db_conn()
+    db.connect()
+    db.create_tables([db_core.User, db_core.Embedding, db_core.Audio, db_core.SpeakerModel])
+    main()

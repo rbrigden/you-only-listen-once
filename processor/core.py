@@ -71,9 +71,11 @@ class YoloProcessor:
             for filename in os.listdir(speaker_path):
                 rec_ids.append(filename)
                 filepath = os.path.join(speaker_path, filename)
+                self.logger.info("Get spectrogram for {}".format(filename))
                 processed_utterances = self.audio_processing.from_file(filepath)
                 all_processed_utterances.extend(processed_utterances)
 
+            self.logger.info("Get embeddings for all audio fixtures")
             embeddings = self.embedding_processor(all_processed_utterances)
 
             embeddings = embeddings.numpy()
@@ -144,7 +146,7 @@ class YoloProcessor:
             user = db_core.User.get(db_core.User.id == id_decision)
 
         # Send the result to the client
-        self.redis_conn.set("result:{}".format(id_), user.username)
+        self.redis_conn.set("result:{}".format(id_), "Unknown" if user is None else user.username)
 
         self.logger.log(logging.INFO, "Decision is: {}".format("Unknown" if user is None else user.username))
         self.logger.log(logging.INFO, "Authentication complete for request {}".format(id_))
@@ -157,14 +159,13 @@ class YoloProcessor:
         user.save()
 
         audio_bytes = self.redis_conn.get('audio:{}'.format(request_id))
-        processed_utterances = self.audio_processing(audio_bytes)
+        processed_utterances = self.audio_processing(audio_bytes, split=4)
         embeddings = self.embedding_processor(processed_utterances)
-
         embeddings = embeddings.numpy()
 
         for i in range(embeddings.shape[0]):
             embedding_data = embeddings[i]
-            db_core.create_embedding_record(user=user, embedding=embedding_data, rec_id=request_id)
+            db_core.create_embedding_record(user=user, embedding=embedding_data, rec_id="{}:{}".format(request_id, i))
 
         self.speaker_classification.update_speakers()
 

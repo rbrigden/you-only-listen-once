@@ -60,12 +60,14 @@ def plot_embeddings(embeddings, labels):
     for i, name in enumerate(labels):
         class_dict[name].append(embeddings2d[i, :])
 
+
+
     for i, (name, es) in enumerate(class_dict.items()):
         es = np.stack(es)
         x, y = es[:, 0].reshape(-1), es[:, 1].reshape(-1)
-        plt.scatter(x, y, label=str(name).capitalize())
+        plt.scatter(x, y, label=str(name).capitalize(), cmap='rainbow')
 
-    plt.legend()
+    plt.legend(loc="upper left")
 
 
 def get_label(file_path):
