@@ -19,6 +19,9 @@
     height: 80px;
 }
 
+#nameInfo{
+    height: 100px;
+}
 
 #signupbut{
     width: 270px;
@@ -34,26 +37,29 @@
 	background-color: #A4A4A4;
 }
 
-#buttabs{
-    text-align: center;
-}
-
 #nameInp{
     margin-left: 450px;
     height: 50px;
     width: 545px;
     background-color: #ABA4A2;
     font-family: Arial;
+    color: black;
 }
 
+#buttabs{
+    color: black;
+    text-align: center;
+    margin-left: 0%
+    font-size: 15pt;
+}
 
 #info{
 	background-color: #B9F2EB;
 	color: black;
 	width: 540px;
-	height: 650px;
+	height: 750px;
 	text-align: center;
-	margin-left: 450px;
+	margin-left: 31%;
 	font-size: 15pt;
     border-width: 2pt;
     border-color: black;
@@ -64,7 +70,7 @@
     background-color: #D1F7F2;
     color: white;
     width: 540px;
-    height: 550px;
+    height: 900px;
     text-align: center;
     margin-left: 450px;
     font-size: 15pt;
@@ -73,13 +79,14 @@
 
 #instr{
     color: black;
+    font-size: 20pt;
 }
 
 #randphrase{
 	background-color: #83A5A0;
 	width: 350px;
 	height: 200px;
-	font-size: 25pt;
+	font-size: 30pt;
 	text-align: center;
 	margin-left: 110px;
 	color: black;
@@ -88,12 +95,12 @@
 }
 
 #randphraseReg{
-    background-color: #D1F7F2;
-    width: 350px;
-    height: 300px;
-    font-size: 10pt;
+    background-color: #83A5A0;
+    width: 400px;
+    height: 400px;
+    font-size: 13pt;
     text-align: center;
-    margin-left: 110px;
+    margin-left: 15%;
     color: black;
     border-color: black;
     border-width: 5pt;
@@ -147,6 +154,10 @@
     text-align: center;
 }
 
+#recbutsReg{
+    text-align: center;
+    margin-top: 20%;
+}
 
 
 body {

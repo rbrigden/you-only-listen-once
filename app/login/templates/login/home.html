@@ -12,7 +12,6 @@
 	          setTimeout(function(){
 	              $('body').addClass('loaded');
 	          }, 3000);
-
 	      });
 	  </script>
 
@@ -29,11 +28,9 @@
         <input type = "button" id = "signupbut" type = "submit" onclick="location.href='{% url 'events1' %}';" value = "Register" class="btn btn-primary btn-lg">
       </div>
       <br>
-      <!--<div id = "nameInfo">
-		<input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
-      </div>-->
+
       <div id = "info">
-        <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
+        <p id = "instr">Please say the following phrase after clicking the microphone and then re-click the button when you are done recording.</p>
         <br>
         <p id = "randphrase"> PlaceHolder </p>
         <div id = "recbuts">
@@ -46,27 +43,16 @@
 
       <script> 
 
-      	
-
-
-
-
-
-
-
         /*Code for recording from microphone reference: https://addpipe.com/blog/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/ */
 
         URL = window.URL || window.webkitURL;
-
         var gumStream;            
         var rec;              
         var input;            
         var AudioContext = window.AudioContext || window.webkitAudioContext;
         var audioContext 
         var recordButton = document.getElementById("startrec1");
-        //var stopButton = document.getElementById("stoprec");
         recordButton.addEventListener("click", start_stop);
-        //stopButton.addEventListener("click", stopRecording);
 
 		var recording = false;
 		function start_stop() {
@@ -78,7 +64,6 @@
 				recording = true;
 				startRecording()
 			}
-
 		}
 
         function startRecording() {
@@ -131,8 +116,6 @@
           li.appendChild(link);
           li.appendChild(document.createTextNode (" "))
           console.log(blob);
-          
-
           var url = "/login";                                
 		  var formData = new FormData();
 		  formData.append('picture', blob);
@@ -184,14 +167,8 @@
         function getRandomInt(max) {
           return Math.floor(Math.random() * Math.floor(max));
         }
-
-
-
+        
       </script>
       <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script> 
   </body>
 </html>
-
-
-
-

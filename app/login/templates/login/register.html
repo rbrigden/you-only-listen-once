@@ -17,9 +17,19 @@
 	  </script>
 
     <link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
+
   </head> 
 
   <body>
+      
+      {% if messages %}
+        <ul class="messages">
+          {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
       <div id = "buttabs">
         <input type = "button" id = "loginbut" type = "submit" value ="Login" 
         onclick="location.href='{% url 'events' %}';" class="btn btn-primary btn-lg">
@@ -30,9 +40,9 @@
         <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
       </div>
       <div id = "infoReg">
-        <p id = "instr">Please say the following phrase after clicking the start recording button.</p>
-        <p id = "randphraseReg"> Rnaodm </p>
-        <div id = "recbuts">
+        <p id = "instr">Please say the following phrase after clicking the microphone and then re-click the button when you are done recording.</p>
+        <p id = "randphraseReg"> PlaceHolder </p>
+        <div id = "recbutsReg">
           <input type = "button" id = "startrec" class = "record" value = "">
         </div>
       </div>
@@ -103,6 +113,7 @@
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
           rec.exportWAV(createDownloadLink);
+          //alert("Thank you for registering!")
         }
 
         function getCSRFToken() {
@@ -150,7 +161,6 @@
               processData: false,
               data: formData})
                   .done(function(e){
-                      alert('done!');
                   });
             }
 
