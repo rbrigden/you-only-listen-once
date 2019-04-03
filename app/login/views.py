@@ -9,6 +9,7 @@ import redis
 import hashlib
 from datetime import datetime
 import json
+import asyncio
 
 _redis_conn = None
 
@@ -17,6 +18,14 @@ def get_redis_conn():
     if _redis_conn is None:
         _redis_conn = redis.Redis(host='localhost', port=6379)
     return _redis_conn
+
+
+async def _fetch(key, conn):
+    val = conn.get(key)
+    while val is None:
+        asyncio.sleep(1)
+        val = conn.get(key)
+    return val
 
 
 def myconverter(o):
@@ -56,6 +65,7 @@ def events(request):
 
         conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
         conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
+        result = _fetch('result:{}'.format(redis_request['id']), conn)
         print('POST request serviced')
         return render(request, 'login/home.html', {})
     print('GET request made')
