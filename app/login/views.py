@@ -63,8 +63,8 @@ def events(request):
             "type": "authenticate"
         }
 
-        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
         conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
+        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
         result = _fetch('result:{}'.format(redis_request['id']), conn)
         print('POST request serviced')
         return render(request, 'login/home.html', {})
@@ -86,9 +86,9 @@ def events1(request):
             "type": "register"
         }
 
-        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
         conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
 
+        conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
         print("Complete register")
         return render(request, 'login/home.html', {})
     return render(request, 'login/register.html', {})

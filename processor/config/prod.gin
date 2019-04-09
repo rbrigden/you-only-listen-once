@@ -7,7 +7,6 @@ redis.Redis.host = "127.0.0.1"
 # AUDIO PROCESSOR
 AudioProcessor.sample_rate = 22050
 
-
 # EMBEDDING PROCESSOR
 SpeakerEmbeddingProcessor.model_cls = @training.speaker_verification.model.IdentifyAndEmbed
 SpeakerEmbeddingProcessor.checkpoint_path = "models/verification/production_baseline.pt"
@@ -16,14 +15,13 @@ SpeakerEmbeddingInference.stats_path = "data/voxceleb/voxceleb_stats.npy"
 
 # EXTERNAL DATA
 load_voxceleb_embeddings.voxceleb_wav_path = "/home/rbrigden/voxceleb/wav"
-YoloProcessor.load_external = False
-load_voxceleb_embeddings.n = 25
+YoloProcessor.load_external = True
+load_voxceleb_embeddings.n = 50
 
 # CLASSIFICATION PROCESSOR
 sklearn.linear_model.LogisticRegression.solver = 'liblinear'
 sklearn.linear_model.LogisticRegression.penalty = 'l2'
 sklearn.linear_model.LogisticRegression.class_weight = 'balanced'
 
-
 # DEMO
-YoloProcessor.load_fixtures = False
+YoloProcessor.load_fixtures = True

@@ -135,7 +135,7 @@ class YoloProcessor:
 
     def _authenticate(self, id_):
         audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
-        U.play_audio(audio_bytes)
+        #U.play_audio(audio_bytes)
         processed_utterance = self.audio_processing(audio_bytes)
         embeddings = self.embedding_processor(processed_utterance)
         id_decision = self.speaker_classification.classify_speaker(embeddings.squeeze(0).numpy())
