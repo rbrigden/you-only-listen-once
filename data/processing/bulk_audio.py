@@ -23,12 +23,21 @@ def process_with_mel(wav_path, out_path, sample_rate):
     np.save(out_path, mel)
 
 
+@ray.remote
+def process_with_stft(wav_path, out_path, target_sr=16000):
+    data, sr = librosa.load(wav_path)
+    data = librosa.resample(data, orig_sr=sr, target_sr=target_sr)
+    spect = librosa.stft(y=data, n_fft=1024, win_length=400, hop_length=160)
+    spect = np.abs(spect)
+    np.save(out_path, spect)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=str,
                         default='/home/rbrigden/voxceleb/wav')
     parser.add_argument("--dest", type=str,
-                        default='/home/rbrigden/voxceleb/processed')
+                        default='/home/rbrigden/voxceleb/processed_stft')
     parser.add_argument("--mode", type=str,
                         default="mfcc")
     parser.add_argument("--sample-rate", type=int, default=22050)
@@ -59,6 +68,8 @@ if __name__ == "__main__":
                 task = process_with_mfcc.remote(wav_file_path, out_path, args.sample_rate)
             elif args.mode == "mel":
                 task = process_with_mel.remote(wav_file_path, out_path, args.sample_rate)
+            elif args.mode == "stft":
+                task = process_with_stft.remote(wav_file_path, out_path, args.sample_rate)
             else:
                 raise ValueError("Must specify valid mode")
             object_ids.append(task)
