@@ -56,22 +56,22 @@ class ProcessedDataset(data.Dataset):
         utterances = []
         labels = []
         for npy_path in file_paths:
-            utterances.append(np.load(npy_path))
+            utterances.append(npy_path)
             labels.append(get_label(npy_path))
 
         self.utterances = utterances
         self.labels = labels
 
-    def normalize(self, mean, std):
-        mean, variance = mean, std
-        norm_ = lambda u: (u - mean.reshape(1, -1)) / (std.reshape(1, -1))
-        self.utterances = [norm_(u) for u in self.utterances]
+    # def normalize(self, mean, std):
+    #     mean, variance = mean, std
+    #     norm_ = lambda u: (u - mean.reshape(1, -1)) / (std.reshape(1, -1))
+    #     self.utterances = [norm_(u) for u in self.utterances]
 
     def __len__(self):
         return len(self.utterances)
 
     def __getitem__(self, item):
-        return [torch.FloatTensor(self.utterances[item]), self.labels[item]]
+        return [torch.FloatTensor(np.load(self.utterances[item])), self.labels[item]]
 
 
 

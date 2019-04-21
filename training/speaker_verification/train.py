@@ -35,6 +35,8 @@ class VerificationTrainer:
                                     lr=learning_rate,
                                     weight_decay=5e-4,
                                     momentum=0.9)
+
+        self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[5, 20, 30])
 
         if resume:
@@ -81,7 +83,7 @@ class VerificationTrainer:
             preds2, em2 = self.model([seq_batch2, seq_lens2])
             embed_labels = (label_batch1 == label_batch2).float().cuda()
             verification_loss = self._verification_objective(preds1, preds2, embed_labels)
-            classification_loss = F.nll_loss(preds1, label_batch1.cuda()) + F.nll_loss(preds2, label_batch2.cuda())
+            classification_loss = 0.5 * F.nll_loss(preds1, label_batch1.cuda()) + 0.5 * F.nll_loss(preds2, label_batch2.cuda())
             loss = (1 - alpha) * classification_loss + alpha * verification_loss
             loss.backward()
             self.optimizer.step()

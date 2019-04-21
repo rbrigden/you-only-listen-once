@@ -64,7 +64,7 @@ def train_verification(args):
     total_samples_processed = 0
 
     initial_alpha = args.alpha
-
+    best_eer = 1.0
     end = time.time()
     print("Setup done. Took {} secs".format(round(end - start, 4)))
     total_steps = 0
@@ -103,15 +103,31 @@ def train_verification(args):
                 }
                 tboard_plot(writer, total_steps, tboard_update)
 
-        end = time.time()
 
-        # Compute validation error
-        print("saving checkpoint")
-        trainer.checkpoint(args.checkpoint_path)
+                if (total_steps+1) % args.checkpoint_freq == 0:
+                    veri_eer = trainer.compute_verification_eer(veri_evaluator)
+                    if veri_eer < best_eer:
+                        print("saving checkpoint")
+                        trainer.checkpoint(args.checkpoint_path)
+                        best_eer = veri_eer
+
+                    tboard_update = {
+                        "eer": veri_eer,
+                    }
+                    tboard_plot(writer, e, tboard_update)
+
+
+        end = time.time()
 
         epoch_time = end - start
         val_error = trainer.validation(val_loader)
         veri_eer = trainer.compute_verification_eer(veri_evaluator)
+
+        # Compute validation error
+        if veri_eer < best_eer:
+            print("saving checkpoint")
+            trainer.checkpoint(args.checkpoint_path)
+            best_eer = veri_eer
 
         tboard_update = {
             "eer": veri_eer,
@@ -136,6 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=100)
     parser.add_argument('--device', type=int, default=0)
     parser.add_argument('--pad', type=str, default='zeros')
+    parser.add_argument('--checkpoint-freq', type=int, default=100)
 
 
     parser.add_argument('--alpha', type=float, default=0.5,

@@ -5,6 +5,7 @@ import os
 import re
 import ray
 import copy
+import pickle as pkl
 
 
 @ray.remote
@@ -93,15 +94,24 @@ class VoxcelebID(Dataset):
         return dset1, dset2
 
 
+_voxceleb_stats = None
+
 def voxceleb_sample_normalize(x):
-    stats_path = "data/voxceleb/voxceleb_stats_16k.npy"
-    mean, std = np.load(stats_path)
-    mean, std = torch.FloatTensor(mean), torch.FloatTensor(std)
-    return (x - mean.view(1, -1)) / std.view(1, -1)
+    global _voxceleb_stats
+
+    if _voxceleb_stats is None:
+        stats_path = "data/voxceleb/voxceleb_stats_m04d20y2019h22m31s03.pkl"
+        with open(stats_path, 'rb') as f:
+            _voxceleb_stats = pkl.load(f)
+
+    mean = _voxceleb_stats["mean"]
+    variance = _voxceleb_stats["var"]
+    mean, variance = torch.FloatTensor(mean), torch.FloatTensor(variance)
+    return (x - mean.view(1, -1)) / torch.sqrt(variance.view(1, -1))
 
 
 def voxceleb_collate(batch):
-    data = [item[0].permute(1, 0) for item in batch]
+    data = [item[0] for item in batch]
     data = [voxceleb_sample_normalize(x) for x in data]
     target = [item[1] for item in batch]
     target = torch.LongTensor(target)
@@ -113,7 +123,7 @@ def voxceleb_clip_collate(max_size, min_size=20, sample=True):
     def _collate_fn(batch):
         data = []
         for x in batch:
-            s = x[0].permute(1, 0)
+            s = x[0]
             s = voxceleb_sample_normalize(s)
             if sample and len(s) > max_size:
                 start_idx = np.random.randint(0, len(s)-max_size)
@@ -168,7 +178,7 @@ class VoxcelebVerification(Dataset):
         return enrol_set, test_set, labels
 
 def voxceleb_veri_collate(batch):
-    utterances = [item[0].permute(1, 0) for item in batch]
+    utterances = [item[0] for item in batch]
     utterances = [voxceleb_sample_normalize(x) for x in utterances]
     return [utterances]
 
@@ -176,7 +186,7 @@ def voxceleb_clip_and_sample_veri_collate(max_size):
     def _collate_fn(batch):
         data = []
         for x in batch:
-            x = x[0].permute(1, 0)
+            x = x[0]
             x = voxceleb_sample_normalize(x)
             if len(x) > max_size:
                 start_idx = np.random.randint(0, len(x)-max_size)
@@ -186,47 +196,3 @@ def voxceleb_clip_and_sample_veri_collate(max_size):
     return _collate_fn
 
 
-def welford_update(existingAggregate, newValue):
-    """ https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance """
-    (count, mean, M2) = existingAggregate
-    count += 1
-    delta = newValue - mean
-    mean += delta / count
-    delta2 = newValue - mean
-    M2 += delta * delta2
-    return (count, mean, M2)
-
-
-def finalize(existingAggregate):
-    """ https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance """
-    (count, mean, M2) = existingAggregate
-    (mean, variance, sampleVariance) = (mean, M2/count, M2/(count - 1))
-    if count < 2:
-        return float('nan')
-    else:
-        return (mean, variance, sampleVariance)
-
-def compute_statistics(speakers, processed_root):
-    dset = VoxcelebID(processed_root, speakers)
-    loader = DataLoader(dset, batch_size=200, shuffle=False, num_workers=10, collate_fn=voxceleb_collate)
-    aggregate = (0, np.zeros(64,), np.zeros(64,))
-
-    num_batches = len(dset) // 100
-
-
-    for idx, (utterance_batch, label_batch) in enumerate(loader):
-        for u in utterance_batch:
-            for t in range(u.shape[0]):
-                aggregate = welford_update(aggregate, u[t].numpy().reshape((64,)))
-        print("idx = {} / {}".format(idx, num_batches))
-    mean, variance, sampleVariance = finalize(aggregate)
-
-    np.save("voxceleb_stats.npy", [mean, variance, sampleVariance])
-    print("mean: {}, variance: {}, sampleVariance: {}".format(mean, variance, sampleVariance))
-
-
-
-if __name__ == "__main__":
-    speakers = list(range(1200))
-    processed_root = "/home/rbrigden/voxceleb/processed1"
-    compute_statistics(speakers, processed_root)
