@@ -78,8 +78,8 @@ if __name__ == "__main__":
         for filename in filenames:
             wav_file_path = os.path.join(root, filename)
             out_name = os.path.splitext(filename)[0]
-            base_name = root.split("/")[-2:]
-            out_path = os.path.join(*([dest_path]+base_name+[out_name]))
+            # base_name = root.split("/")[-2:]
+            out_path = os.path.join(*([dest_path]+[out_name]))
 
             task_args.append((wav_file_path, out_path, args.sample_rate))
 
