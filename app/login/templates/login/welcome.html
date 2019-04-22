@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		{% load staticfiles %}
+    	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    	<link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
+		<title>Welcome YOLO</title>
+	</head>
+	<body id = "welcomebod">
+		<input type = "button" id = "logoutBut" type = "submit" onclick="location.href='{% url 'events' %}';" value = "Log Out" class="btn btn-primary btn-lg">
+		<p id= "welcome"> Welcome to YOLO </p>
+	</body>
+
+	<script>
+		var query = window.location.href.split("welcome/")[1];
+		document.getElementById('welcome').innerHTML = "Welcome to YOLO " + query;
+	</script>
+</html>

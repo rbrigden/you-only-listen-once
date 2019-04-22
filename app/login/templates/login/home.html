@@ -18,8 +18,7 @@
     <link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
   </head> 
 
-  <body>
-		
+  <body id = "registerbod">
 	  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300" type="text/css" />
 
       <div id = "buttabs">
@@ -54,17 +53,17 @@
         var recordButton = document.getElementById("startrec1");
         recordButton.addEventListener("click", start_stop);
 
-		var recording = false;
-		function start_stop() {
-			if (recording) {
-				recording = false
-				stopRecording();
-			}
-			else{
-				recording = true;
-				startRecording()
-			}
-		}
+		    var recording = false;
+		    function start_stop() {
+			   if (recording) {
+				  recording = false
+				  stopRecording();
+			 }
+			 else{
+		  		recording = true;
+		  		startRecording()
+		  	}
+		  }
 
         function startRecording() {
           console.log("IN START RECORDING");
@@ -75,6 +74,8 @@
             input = audioContext.createMediaStreamSource(stream);
             rec = new Recorder(input,{numChannels:1})
             rec.record()
+            var buttons = document.getElementById("startrec1");
+            buttons.style.background = 'url("http://icons.iconarchive.com/icons/designbolts/free-multimedia/256/Studio-Mic-icon.png") no-repeat';
           }).catch(function(err) {
           });
         }
@@ -87,6 +88,7 @@
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
           rec.exportWAV(createDownloadLink);
+
         }
 
         function getCSRFToken() {
@@ -114,7 +116,7 @@
           li.appendChild(au);
           li.appendChild(document.createTextNode(filename+".wav "))
           li.appendChild(link);
-          li.appendChild(document.createTextNode (" "))
+          li.appendChild(document.createTextNode (" "));
           console.log(blob);
           var url = "/login";                                
 		  var formData = new FormData();
@@ -128,7 +130,12 @@
 		      processData: false,
 		      data: formData})
 		          .done(function(e){
+                var name = e['username'];
+                location.href="/welcome/"+name;
 		          });
+
+        var buttons = document.getElementById("startrec1");
+            buttons.style.background = 'url("http://icons.iconarchive.com/icons/blackvariant/button-ui-requests-15/256/Microphone-icon.png")';
         }
 
         function getText(){
@@ -138,7 +145,7 @@
           request.open('GET', 'https://gist.githubusercontent.com/deekayen/4148741/raw/01c6252ccc5b5fb307c1bb899c95989a8a284616/1-1000.txt', true);
           request.send(null);
           request.onreadystatechange = function () {
-          	  console.log('in getText')
+          	  console.log('in getText');
               if (request.readyState === 4 && request.status === 200) {
                   var type = request.getResponseHeader('Content-Type');
                   if (type.indexOf("text") !== 1) {
@@ -167,7 +174,7 @@
         function getRandomInt(max) {
           return Math.floor(Math.random() * Math.floor(max));
         }
-        
+
       </script>
       <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script> 
   </body>

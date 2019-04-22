@@ -21,15 +21,6 @@
   </head> 
 
   <body>
-      
-      {% if messages %}
-        <ul class="messages">
-          {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-
       <div id = "buttabs">
         <input type = "button" id = "loginbut" type = "submit" value ="Login" 
         onclick="location.href='{% url 'events' %}';" class="btn btn-primary btn-lg">
@@ -105,6 +96,8 @@
             input = audioContext.createMediaStreamSource(stream);
             rec = new Recorder(input,{numChannels:1})
             rec.record()
+            var buttons = document.getElementById("startrec");
+            buttons.style.background = 'url("http://icons.iconarchive.com/icons/designbolts/free-multimedia/256/Studio-Mic-icon.png") no-repeat';
           }).catch(function(err) {
           });
         }
@@ -161,8 +154,17 @@
               processData: false,
               data: formData})
                   .done(function(e){
+                    if(e['error']) {
+                      alert(e['error']);
+                    }
                   });
-            }
+            
+
+            var buttons = document.getElementById("startrec");
+            buttons.style.background = 'url("http://icons.iconarchive.com/icons/blackvariant/button-ui-requests-15/256/Microphone-icon.png")';
+            //location.reload();
+          }
+          //code for background 
 
 
 
