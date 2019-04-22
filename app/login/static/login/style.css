@@ -1,11 +1,12 @@
 #loginbut{
-    width: 270px;
+    width: 45%;
+    margin-top: 10px;
     height: 40px;
-    margin-top: 110px;
-    background-color: #98F0E1;
+    background-color: #778899;
     font-size: 20pt;
     color: black;
     height: 80px;
+    opacity: 0.8;
 }
 
 
@@ -13,7 +14,11 @@
 	background-color: #A4A4A4;
 }
 
-
+#welcome{
+    text-align: center;
+    font-family: "Lucida Console";
+    font-size: 90pt;
+}
 
 #nameInfo{
     height: 80px;
@@ -24,86 +29,111 @@
 }
 
 #signupbut{
-    width: 270px;
+    width: 45%;
     height: 40px;
-    margin-top: 110px;
-    background-color: #98F0E1;
+    margin-top: 10px;
+    background-color: #778899;
     font-size: 20pt;
     color: black;
     height: 80px;
+    opacity: 0.8;
 }
 
 #signupbut:hover{
 	background-color: #A4A4A4;
 }
 
-#nameInp{
-    margin-left: 450px;
-    height: 50px;
-    width: 545px;
-    background-color: #ABA4A2;
-    font-family: Arial;
+#logoutBut{
+    width: 75%;
+    height: 40px;
+    margin-left: 12%;
+    margin-top: -15%;
+    background-color: #778899;
+    font-size: 20pt;
     color: black;
+    height: 80px;
+    opacity: 0.8;
+}
+
+#signupbut:hover{
+    background-color: #A4A4A4;
+}
+
+#nameInp{
+    height: 50px;
+    width: 90%;
+    margin-left: 5%;
+    position: absolute;
+    background-color: #ABA4A2;
+    font-family: "Georgia";
+    color: black;
+    font-size: 20pt;
+    text-align: center;
+    opacity: 0.6;
 }
 
 #buttabs{
     color: black;
     text-align: center;
-    margin-left: 0%
+    margin-left: 0%;
     font-size: 15pt;
 }
 
 #info{
-	background-color: #B9F2EB;
+	background-color: #696969;
 	color: black;
-	width: 540px;
+	width: 90%;
+    margin-left: 5%;
+    position: absolute;
 	height: 750px;
 	text-align: center;
-	margin-left: 31%;
 	font-size: 15pt;
     border-width: 2pt;
     border-color: black;
+    opacity: 0.5;
 
 }
 
 #infoReg{
-    background-color: #D1F7F2;
+    background-color: #696969;
     color: white;
-    width: 540px;
+    width: 90%;
     height: 900px;
     text-align: center;
-    margin-left: 450px;
+    margin-left: 5%;
     font-size: 15pt;
+    opacity: 0.5;
 
 }
 
 #instr{
     color: black;
-    font-size: 20pt;
+    opacity: 1;
+    font-size: 25pt;
 }
 
 #randphrase{
-	background-color: #83A5A0;
-	width: 350px;
+	background-color: #C0C0C0;
+	width: 100%;
 	height: 200px;
-	font-size: 30pt;
+	font-size: 50pt;
 	text-align: center;
-	margin-left: 110px;
 	color: black;
 	border-color: black;
 	border-width: 5pt;
+    font-family: "Lucida Console"
 }
 
 #randphraseReg{
-    background-color: #83A5A0;
-    width: 400px;
-    height: 400px;
-    font-size: 13pt;
+    background-color: #C0C0C0;
+    width: 100%;
+    height: 500px;
+    font-size: 30pt;
     text-align: center;
-    margin-left: 15%;
     color: black;
     border-color: black;
     border-width: 5pt;
+    font-family: "Lucida Console"
 }
 
 #recordings{
@@ -111,9 +141,11 @@
 }
 
 #startrec{
-    width: 250px;
-    height: 250px;
-    margin-top: -90px;
+    width: 260px;
+    height: 270px;
+    margin-top: -230px;
+    margin-left: -120px;
+    position: absolute;
     background: url(http://icons.iconarchive.com/icons/blackvariant/button-ui-requests-15/256/Microphone-icon.png) no-repeat;
     cursor: pointer;
     border:none;
@@ -122,8 +154,10 @@
 }
 
 #startrec1{
-    width: 250px;
-    height: 250px;
+    width: 260px;
+    height: 270px;
+    position: absolute;
+    margin-left: -120px;
     margin-top: 50px;
     background: url(http://icons.iconarchive.com/icons/blackvariant/button-ui-requests-15/256/Microphone-icon.png) no-repeat;
     cursor: pointer;
@@ -159,12 +193,18 @@
     margin-top: 20%;
 }
 
+#welcomebod{
+    color: black;
+    margin-top: 20%;
+}
+
+
 
 body {
     width: 100wh;
     height: 90vh;
     color: #fff;
-    background: linear-gradient(-45deg, #EE7752, #E73C7E, #23A6D5, #23D5AB);
+    background: linear-gradient(-45deg, #778899, #708090, #C0C0C0, #DCDCDC);
     background-size: 400% 400%;
     -webkit-animation: Gradient 15s ease infinite;
     -moz-animation: Gradient 15s ease infinite;
