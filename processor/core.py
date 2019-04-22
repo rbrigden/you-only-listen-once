@@ -29,14 +29,15 @@ class YoloProcessor:
                  load_fixtures=False):
         self.registration_split = registration_split
         self.load_external = load_external
-
         self.speaker_classification = SpeakerClassificationProcessor()
         self.embedding_processor = SpeakerEmbeddingProcessor()
         self.audio_processing = AudioProcessor()
         self.redis_conn = redis.Redis()
-
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
         # Set up processor logging
-        logging.basicConfig(filename='yolo_processor.log',
+        logging.basicConfig(
+                            filename='yolo_processor.log',
                             filemode='a',
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%H:%M:%S',
@@ -135,7 +136,7 @@ class YoloProcessor:
 
     def _authenticate(self, id_):
         audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
-        U.play_audio(audio_bytes)
+        #U.play_audio(audio_bytes)
         processed_utterance = self.audio_processing(audio_bytes)
         embeddings = self.embedding_processor(processed_utterance)
         id_decision = self.speaker_classification.classify_speaker(embeddings.squeeze(0).numpy())
