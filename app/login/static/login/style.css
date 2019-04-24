@@ -1,3 +1,158 @@
+#sidebar-wrapper{
+    z-index: 1;
+    position: absolute;
+    width: 0;
+    height: 100%;
+    overflow-y:hidden;
+    background: #2C3E50;
+    opacity: 0.5;
+
+}
+
+#page-content-wrapper{
+    width: 100%;
+    position:absolute;
+    padding: 15px;
+
+}
+
+#wrapper.menuDisplayed #sidebar-wrapper{
+    width:250px;
+
+}
+
+#wrapper.menuDisplayed #page-content-wrapper{
+    padding-left: 250px;
+}
+
+.sidebar-nav{
+    padding: 0;
+    list-style: none;
+}
+
+li{
+    font-size: 15pt;
+}
+
+.sidebar-nav li{
+    text-indent: 20px;
+    line-height: 40px;
+}
+
+.sidebar-nav li a{
+    display: block;
+    text-decoration: none;
+    color: #ddd;
+}
+
+.sidebar-nav li a:hover{
+    background: #16D005;
+}
+
+#menu-toggle{
+    font-size: 15pt;
+}
+
+
+#instr{
+    font-size: 15pt;
+}
+
+#randphrase {
+    font-size: 25pt;
+}
+
+#startrec1{
+    background: url(https://resizeimage.net/mypic/k8ZrFivAU6UI5ATq/RZF7M/start.png) no-repeat;
+    background-size: contain;
+    width: 82px;
+    height: 82px;
+    border-width: 0px;
+}
+
+#startrec{
+    background: url(https://resizeimage.net/mypic/k8ZrFivAU6UI5ATq/RZF7M/start.png) no-repeat;
+    background-size: contain;
+    width: 82px;
+    height: 82px;
+    border-width: 0px;
+}
+
+#body-main-content{
+    color: black;
+    background-color: #E0F8F7;
+    opacity: 0.2;
+    border-radius: 25px;
+}
+
+#buts{
+    text-align: right;
+}
+
+#randphraseReg {
+    font-size: 25pt;
+}
+
+#nameInp{
+    background-color: #CEF6F5;
+    height: 35px;
+    width: 250px;
+    border-radius: 15px;
+    font-size: 15pt;
+    color: black;
+}
+
+#animation-body {
+    display: flex;
+    justify-content: center;
+}
+
+#bars {
+    padding-top: 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+/*     background: black; */
+}
+
+.bar {
+    background: #81DAF5;
+    bottom: 1px;
+    height: 3px;
+    width: 10px;
+    margin: 0px 4px;
+    border-radius: 5px;
+    animation: sound 0ms -600ms linear infinite alternate;
+}
+
+#welcome{
+    font-size: 20pt;
+}
+
+@keyframes sound {
+    0% {
+       opacity: .35;
+        height: 3px; 
+    }
+    100% {
+        opacity: 1;       
+        height: 70px;        
+    }
+}
+
+.bar:nth-child(1)  { left: 1px; animation-duration: 474ms; }
+.bar:nth-child(2)  { left: 15px; animation-duration: 433ms; }
+.bar:nth-child(3)  { left: 29px; animation-duration: 407ms; }
+.bar:nth-child(4)  { left: 43px; animation-duration: 458ms; }
+.bar:nth-child(5)  { left: 57px; animation-duration: 400ms; }
+.bar:nth-child(6)  { left: 71px; animation-duration: 427ms; }
+.bar:nth-child(7)  { left: 85px; animation-duration: 441ms; }
+.bar:nth-child(8)  { left: 99px; animation-duration: 419ms; }
+.bar:nth-child(9)  { left: 113px; animation-duration: 487ms; }
+.bar:nth-child(10) { left: 127px; animation-duration: 442ms; }
+
+/*
+
 #loginbut{
     width: 45%;
     margin-top: 10px;
@@ -257,3 +412,5 @@ h6 {
     right: 0;
     left: 0;
 }
+
+*/
