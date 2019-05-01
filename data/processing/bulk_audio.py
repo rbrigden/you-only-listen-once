@@ -8,6 +8,22 @@ import speechpy
 from datetime import datetime
 import pickle as pkl
 
+## VAD Parameters ##
+VAD_THRESHOLD = -80     # if a frame has no filter that exceeds this threshold, it is assumed silent and removed
+VAD_MIN_NFRAMES = 150   # if a filtered utterance is shorter than this after VAD, the full utterance is retained
+
+assert(VAD_THRESHOLD >= -100.0)
+assert(VAD_MIN_NFRAMES >= 1)
+
+
+def VAD(utterance):
+    filtered = utterance[utterance.max(axis=1) > VAD_THRESHOLD]
+    return utterance if len(filtered) < VAD_MIN_NFRAMES else filtered
+
+
+def normalize(utterance):
+    utterance = utterance - np.mean(utterance, axis=0, dtype=np.float64)
+    return np.float16(utterance)
 
 def procces_wav(wav_path):
     fs, signal = wav.read(wav_path)
@@ -15,10 +31,18 @@ def procces_wav(wav_path):
     return spect
 
 @ray.remote
-def process_with_mel(wav_path, out_path, target_sample_rate):
+def process_with_mel(wav_path, out_path, sample_normalize=True, vad=False):
     spect = procces_wav(wav_path)
+    stats = [np.mean(spect, axis=0), 1, np.var(spect, axis=0)]
+
+    if vad:
+        spect = VAD(spect)
+
+    if sample_normalize:
+        spect = normalize(spect)
+
     np.save(out_path, spect)
-    return [np.mean(spect, axis=0), 1, np.var(spect, axis=0)]
+    return stats
 
 @ray.remote
 def merge_stats(a, b):
@@ -55,9 +79,9 @@ if __name__ == "__main__":
                         default='/home/rbrigden/voxceleb/processed_stft')
     parser.add_argument("--mode", type=str, default="mel")
     parser.add_argument("--stats-path", type=str, default="data/voxceleb/voxceleb_stats")
-
-    parser.add_argument("--sample-rate", type=int, default=22050)
     parser.add_argument("--compute-stats", action='store_true', default=False)
+    parser.add_argument("--vad", action='store_true', default=False)
+    parser.add_argument("--normalize", action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -81,7 +105,7 @@ if __name__ == "__main__":
             # base_name = root.split("/")[-2:]
             out_path = os.path.join(*([dest_path]+[out_name]))
 
-            task_args.append((wav_file_path, out_path, args.sample_rate))
+            task_args.append((wav_file_path, out_path))
 
     print(len(task_args))
     tasks = [process_with_mel.remote(*x) for x in task_args]

@@ -3,14 +3,7 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 import os
 import re
-import ray
 import copy
-
-
-@ray.remote
-def load_file(path):
-    return np.load(path)
-
 
 def get_all_data_file_paths(processed_root):
     paths = []
@@ -22,8 +15,8 @@ def get_all_data_file_paths(processed_root):
 
 
 def sparse_speaker_id_from_path(path):
-    tokens = path.split('-')
-    sparse_id = tokens[0]
+    tokens = os.path.basename(path).split('-')
+    sparse_id = int(tokens[0])
     return sparse_id
 
 def densify_speaker_ids(data_file_paths):
@@ -35,10 +28,6 @@ def densify_speaker_ids(data_file_paths):
             sparse_to_dense[sparse_id] = c
             c += 1
     return sparse_to_dense
-
-
-def load_files(file_paths):
-    return ray.get([load_file.remote(path) for path in file_paths])
 
 
 class NistID(Dataset):
@@ -82,28 +71,20 @@ class NistID(Dataset):
         return dset1, dset2
 
 
-def nist_sample_normalize(x):
-    stats_path = "data/voxceleb/voxceleb_stats.npy"
-    mean, variance, _ = np.load(stats_path)
-    mean, variance = torch.FloatTensor(mean), torch.FloatTensor(variance)
-    return (x - mean.view(1, -1)) / torch.sqrt(variance.view(1, -1))
-
-
-def nist_collate(batch):
+def collate(batch):
     data = [item[0] for item in batch]
-    data = [nist_sample_normalize(x) for x in data]
+    data = [x for x in data]
     target = [item[1] for item in batch]
     target = torch.LongTensor(target)
     return [data, target]
 
 
-def nist_clip_collate(max_size, sample=True):
+def clip_collate(max_size, sample=True):
     """ If len(utterance) > max_size, sample a max_size segment """
     def _collate_fn(batch):
         data = []
         for x in batch:
             s = x[0]
-            s = nist_sample_normalize(s)
             if sample and len(s) > max_size:
                 start_idx = np.random.randint(0, len(s)-max_size)
                 s = s[start_idx:start_idx+max_size]
@@ -136,7 +117,7 @@ class NistVerification(Dataset):
     """
 
     def __init__(self, paths):
-        """ DONT use this init. alway use build """
+        """ DONT use this init. always use build """
         self.sample_paths = paths
         self.distinct_paths = sorted(list(set(paths)))
         self.sample_idxs = [self.distinct_paths.index(path) for path in paths]
@@ -156,17 +137,16 @@ class NistVerification(Dataset):
         test_set = cls(test_paths)
         return enrol_set, test_set, labels
 
-def nist_veri_collate(batch):
+def veri_collate(batch):
     utterances = [item[0] for item in batch]
-    utterances = [nist_sample_normalize(x) for x in utterances]
+    utterances = [x for x in utterances]
     return [utterances]
 
-def nist_clip_and_sample_veri_collate(max_size):
+def clip_and_sample_veri_collate(max_size):
     def _collate_fn(batch):
         data = []
         for x in batch:
             x = x[0]
-            x = nist_sample_normalize(x)
             if len(x) > max_size:
                 start_idx = np.random.randint(0, len(x)-max_size)
                 x = x[start_idx:start_idx+max_size]

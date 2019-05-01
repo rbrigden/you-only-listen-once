@@ -94,20 +94,24 @@ class VoxcelebID(Dataset):
         return dset1, dset2
 
 
-_voxceleb_stats = None
+# _voxceleb_stats = None
+#
+# def voxceleb_sample_normalize(x):
+#     global _voxceleb_stats
+#
+#     if _voxceleb_stats is None:
+#         stats_path = "data/voxceleb/voxceleb_stats_m04d20y2019h22m31s03.pkl"
+#         with open(stats_path, 'rb') as f:
+#             _voxceleb_stats = pkl.load(f)
+#
+#     mean = _voxceleb_stats["mean"]
+#     variance = _voxceleb_stats["var"]
+#     mean, variance = torch.FloatTensor(mean), torch.FloatTensor(variance)
+#     return (x - mean.view(1, -1)) / torch.sqrt(variance.view(1, -1))
+#
 
 def voxceleb_sample_normalize(x):
-    global _voxceleb_stats
-
-    if _voxceleb_stats is None:
-        stats_path = "data/voxceleb/voxceleb_stats_m04d20y2019h22m31s03.pkl"
-        with open(stats_path, 'rb') as f:
-            _voxceleb_stats = pkl.load(f)
-
-    mean = _voxceleb_stats["mean"]
-    variance = _voxceleb_stats["var"]
-    mean, variance = torch.FloatTensor(mean), torch.FloatTensor(variance)
-    return (x - mean.view(1, -1)) / torch.sqrt(variance.view(1, -1))
+    return x - torch.mean(x, dim=0)
 
 
 def voxceleb_collate(batch):

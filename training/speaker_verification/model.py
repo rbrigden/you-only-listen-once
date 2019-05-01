@@ -119,9 +119,9 @@ class IdentifyAndEmbed(nn.Module):
         out = self.net(x)
         out = self.pool(out)
         z = self.embedding(out)
-        # z = 16 * nn.functional.normalize(z, p=2, dim=1)
         if em:
             return z
+        z = 16 * nn.functional.normalize(z, p=2, dim=1)
         c = self.classification(z)
         return F.log_softmax(c, dim=1), z
 

@@ -5,6 +5,7 @@ import torch.utils.data as dutils
 import training.speaker_verification.train as train
 import training.speaker_verification.verify as verify
 import data.voxceleb.voxceleb as voxceleb
+import data.nist.new.nist as nist
 from training.speaker_verification.loading import ContrastiveSampler, Siamese
 import tensorboardX
 
@@ -17,10 +18,21 @@ def tboard_plot(writer, step, update_dict):
 def train_verification(args):
     writer = tensorboardX.SummaryWriter()
 
-    speakers = list(range(1200))
     start = time.time()
 
+    speakers = list(range(1200))
+
+    if args.dset == 'nist':
+        train_set, val_set = nist.NistID.create_split(args.dset_path, split=0.9, shuffle=True)
+        train_collate_fn = nist.clip_collate(1000, sample=True)
+        val_collate_fn = nist.clip_collate(1000, sample=False)
+    else:
+        train_set, val_set = voxceleb.VoxcelebID.create_split(args.dset_path, speakers, split=0.8, shuffle=True)
+        train_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=True)
+        val_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=False)
+
     if args.resume is not None:
+
         print("Loading classifier params from {}".format(args.resume))
         trainer = train.VerificationTrainer(batch_size=args.batch_size,
                                             learning_rate=args.lr,
@@ -28,19 +40,20 @@ def train_verification(args):
                                             resume=args.resume,
                                             pad=args.pad)
     else:
+
+        if args.dset == 'nist':
+            num_speakers = len(train_set.sparse_to_dense_id.values())
+            print("num speakers", num_speakers)
+        else:
+            num_speakers = len(speakers)
         trainer = train.VerificationTrainer(batch_size=args.batch_size,
                                             learning_rate=args.lr,
-                                            num_speakers=len(speakers),
+                                            num_speakers=num_speakers,
                                             pad=args.pad)
         print("Initialize classifier params from scratch")
 
-    train_set, val_set = voxceleb.VoxcelebID.create_split(args.voxceleb_path, speakers, split=0.8, shuffle=True)
-
     siamese_train_set = Siamese(train_set)
 
-    # Voxceleb length stats: (mean = 356, min = 171, max = 6242, std = 230)
-    train_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=True)
-    val_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=False)
 
     def siamese_collate(batch):
         b1 = train_collate_fn([[u1, l1] for u1, _, l1, _ in batch])
@@ -59,7 +72,7 @@ def train_verification(args):
                                    num_workers=8, pin_memory=True)
 
     # Verification EER computation
-    veri_evaluator = verify.VerificationEvaluator(args.voxceleb_test_path, pad=args.pad)
+    veri_evaluator = verify.VerificationEvaluator(args.dset_test_path, pad=args.pad)
 
     total_samples_processed = 0
 
@@ -143,8 +156,8 @@ def train_verification(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--voxceleb-path', type=str, default="/home/rbrigden/voxceleb/processed")
-    parser.add_argument('--voxceleb-test-path', type=str, default="/home/rbrigden/voxceleb/test/processed")
+    parser.add_argument('--dset-path', type=str, default="/home/rbrigden/voxceleb/processed")
+    parser.add_argument('--dset-test-path', type=str, default="/home/rbrigden/voxceleb/test/processed")
     parser.add_argument('--checkpoint-path', type=str, default="models/verification/base.pt")
     parser.add_argument('--classification', action='store_true', default=False)
     parser.add_argument('--resume', type=str, default=None)
@@ -152,6 +165,8 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=100)
     parser.add_argument('--device', type=int, default=0)
     parser.add_argument('--pad', type=str, default='zeros')
+    parser.add_argument('--dset', type=str, default='nist')
+
     parser.add_argument('--checkpoint-freq', type=int, default=100)
 
 
