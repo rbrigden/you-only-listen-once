@@ -1,11 +1,167 @@
+#sidebar-wrapper{
+    z-index: 1;
+    position: absolute;
+    width: 0;
+    height: 100%;
+    overflow-y:hidden;
+    background: #2C3E50;
+    opacity: 0.5;
+
+}
+
+#page-content-wrapper{
+    width: 100%;
+    position:absolute;
+    padding: 15px;
+
+}
+
+#wrapper.menuDisplayed #sidebar-wrapper{
+    width:250px;
+
+}
+
+#wrapper.menuDisplayed #page-content-wrapper{
+    padding-left: 250px;
+}
+
+.sidebar-nav{
+    padding: 0;
+    list-style: none;
+}
+
+li{
+    font-size: 15pt;
+}
+
+.sidebar-nav li{
+    text-indent: 20px;
+    line-height: 40px;
+}
+
+.sidebar-nav li a{
+    display: block;
+    text-decoration: none;
+    color: #ddd;
+}
+
+.sidebar-nav li a:hover{
+    background: #16D005;
+}
+
+#menu-toggle{
+    font-size: 15pt;
+}
+
+
+#instr{
+    font-size: 15pt;
+}
+
+#randphrase {
+    font-size: 25pt;
+}
+
+#startrec1{
+    background: url(https://resizeimage.net/mypic/k8ZrFivAU6UI5ATq/RZF7M/start.png) no-repeat;
+    background-size: contain;
+    width: 82px;
+    height: 82px;
+    border-width: 0px;
+}
+
+#startrec{
+    background: url(https://resizeimage.net/mypic/k8ZrFivAU6UI5ATq/RZF7M/start.png) no-repeat;
+    background-size: contain;
+    width: 82px;
+    height: 82px;
+    border-width: 0px;
+}
+
+#body-main-content{
+    color: black;
+    background-color: #E0F8F7;
+    opacity: 0.2;
+    border-radius: 25px;
+}
+
+#buts{
+    text-align: right;
+}
+
+#randphraseReg {
+    font-size: 25pt;
+}
+
+#nameInp{
+    background-color: #CEF6F5;
+    height: 35px;
+    width: 250px;
+    border-radius: 15px;
+    font-size: 15pt;
+    color: black;
+}
+
+#animation-body {
+    display: flex;
+    justify-content: center;
+}
+
+#bars {
+    padding-top: 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+/*     background: black; */
+}
+
+.bar {
+    background: #81DAF5;
+    bottom: 1px;
+    height: 3px;
+    width: 10px;
+    margin: 0px 4px;
+    border-radius: 5px;
+    animation: sound 0ms -600ms linear infinite alternate;
+}
+
+#welcome{
+    font-size: 20pt;
+}
+
+@keyframes sound {
+    0% {
+       opacity: .35;
+        height: 3px; 
+    }
+    100% {
+        opacity: 1;       
+        height: 70px;        
+    }
+}
+
+.bar:nth-child(1)  { left: 1px; animation-duration: 474ms; }
+.bar:nth-child(2)  { left: 15px; animation-duration: 433ms; }
+.bar:nth-child(3)  { left: 29px; animation-duration: 407ms; }
+.bar:nth-child(4)  { left: 43px; animation-duration: 458ms; }
+.bar:nth-child(5)  { left: 57px; animation-duration: 400ms; }
+.bar:nth-child(6)  { left: 71px; animation-duration: 427ms; }
+.bar:nth-child(7)  { left: 85px; animation-duration: 441ms; }
+.bar:nth-child(8)  { left: 99px; animation-duration: 419ms; }
+.bar:nth-child(9)  { left: 113px; animation-duration: 487ms; }
+.bar:nth-child(10) { left: 127px; animation-duration: 442ms; }
+
+/*
+
 #loginbut{
-    width: 270px;
+    width: 45%;
+    margin-top: 10px;
     height: 40px;
-    margin-top: 110px;
-    background-color: #98F0E1;
+    background-color: #778899;
     font-size: 20pt;
     color: black;
     height: 80px;
+    opacity: 0.8;
 }
 
 
@@ -13,7 +169,11 @@
 	background-color: #A4A4A4;
 }
 
-
+#welcome{
+    text-align: center;
+    font-family: "Lucida Console";
+    font-size: 90pt;
+}
 
 #nameInfo{
     height: 80px;
@@ -24,86 +184,111 @@
 }
 
 #signupbut{
-    width: 270px;
+    width: 45%;
     height: 40px;
-    margin-top: 110px;
-    background-color: #98F0E1;
+    margin-top: 10px;
+    background-color: #778899;
     font-size: 20pt;
     color: black;
     height: 80px;
+    opacity: 0.8;
 }
 
 #signupbut:hover{
 	background-color: #A4A4A4;
 }
 
-#nameInp{
-    margin-left: 450px;
-    height: 50px;
-    width: 545px;
-    background-color: #ABA4A2;
-    font-family: Arial;
+#logoutBut{
+    width: 75%;
+    height: 40px;
+    margin-left: 12%;
+    margin-top: -15%;
+    background-color: #778899;
+    font-size: 20pt;
     color: black;
+    height: 80px;
+    opacity: 0.8;
+}
+
+#signupbut:hover{
+    background-color: #A4A4A4;
+}
+
+#nameInp{
+    height: 50px;
+    width: 90%;
+    margin-left: 5%;
+    position: absolute;
+    background-color: #ABA4A2;
+    font-family: "Georgia";
+    color: black;
+    font-size: 20pt;
+    text-align: center;
+    opacity: 0.6;
 }
 
 #buttabs{
     color: black;
     text-align: center;
-    margin-left: 0%
+    margin-left: 0%;
     font-size: 15pt;
 }
 
 #info{
-	background-color: #B9F2EB;
+	background-color: #696969;
 	color: black;
-	width: 540px;
+	width: 90%;
+    margin-left: 5%;
+    position: absolute;
 	height: 750px;
 	text-align: center;
-	margin-left: 31%;
 	font-size: 15pt;
     border-width: 2pt;
     border-color: black;
+    opacity: 0.5;
 
 }
 
 #infoReg{
-    background-color: #D1F7F2;
+    background-color: #696969;
     color: white;
-    width: 540px;
+    width: 90%;
     height: 900px;
     text-align: center;
-    margin-left: 450px;
+    margin-left: 5%;
     font-size: 15pt;
+    opacity: 0.5;
 
 }
 
 #instr{
     color: black;
-    font-size: 20pt;
+    opacity: 1;
+    font-size: 25pt;
 }
 
 #randphrase{
-	background-color: #83A5A0;
-	width: 350px;
+	background-color: #C0C0C0;
+	width: 100%;
 	height: 200px;
-	font-size: 30pt;
+	font-size: 50pt;
 	text-align: center;
-	margin-left: 110px;
 	color: black;
 	border-color: black;
 	border-width: 5pt;
+    font-family: "Lucida Console"
 }
 
 #randphraseReg{
-    background-color: #83A5A0;
-    width: 400px;
-    height: 400px;
-    font-size: 13pt;
+    background-color: #C0C0C0;
+    width: 100%;
+    height: 500px;
+    font-size: 30pt;
     text-align: center;
-    margin-left: 15%;
     color: black;
     border-color: black;
     border-width: 5pt;
+    font-family: "Lucida Console"
 }
 
 #recordings{
@@ -111,9 +296,11 @@
 }
 
 #startrec{
-    width: 250px;
-    height: 250px;
-    margin-top: -90px;
+    width: 260px;
+    height: 270px;
+    margin-top: -230px;
+    margin-left: -120px;
+    position: absolute;
     background: url(http://icons.iconarchive.com/icons/blackvariant/button-ui-requests-15/256/Microphone-icon.png) no-repeat;
     cursor: pointer;
     border:none;
@@ -122,8 +309,10 @@
 }
 
 #startrec1{
-    width: 250px;
-    height: 250px;
+    width: 260px;
+    height: 270px;
+    position: absolute;
+    margin-left: -120px;
     margin-top: 50px;
     background: url(http://icons.iconarchive.com/icons/blackvariant/button-ui-requests-15/256/Microphone-icon.png) no-repeat;
     cursor: pointer;
@@ -159,12 +348,18 @@
     margin-top: 20%;
 }
 
+#welcomebod{
+    color: black;
+    margin-top: 20%;
+}
+
+
 
 body {
     width: 100wh;
     height: 90vh;
     color: #fff;
-    background: linear-gradient(-45deg, #EE7752, #E73C7E, #23A6D5, #23D5AB);
+    background: linear-gradient(-45deg, #778899, #708090, #C0C0C0, #DCDCDC);
     background-size: 400% 400%;
     -webkit-animation: Gradient 15s ease infinite;
     -moz-animation: Gradient 15s ease infinite;
@@ -217,3 +412,5 @@ h6 {
     right: 0;
     left: 0;
 }
+
+*/

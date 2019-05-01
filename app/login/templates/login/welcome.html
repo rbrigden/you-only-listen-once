@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+	    <meta charset="utf-8">
+	    <title> YOLO </title>
+	    {% load staticfiles %}
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+	    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+	    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+	    <link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
+	    <link href = "https://bootswatch.com/4/solar/bootstrap.min.css" rel = "stylesheet" type = "text/css">
+  	</head> 
+
+
+
+
+
+
+
+	<body id = "welcomebod">
+
+	<div id = "wrapper">
+
+        <!-- sidebar -->
+
+        <div id = "sidebar-wrapper">
+          <ul>
+            <li> <a href = "{% url 'events' %}"> Logout </a> </li>
+          </ul>
+        </div>
+
+        <div id = "page-content-wrapper">
+          <div class = "container-fluid">
+            <div class = "row">
+              <div class = "col-lg-12">
+                <a href= "#" class = "btn-btn-success" id = "menu-toggle"> 
+                  <span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>
+                </a>
+              </div>
+            </div>
+            <br>
+            <br>
+            <div class = "row" id = "body-main-content">
+              <div class = "col-lg-12">
+                <br>
+                <p id = "welcome"> User has been authenticated as: </p>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+	</body>
+
+	<script>
+
+
+		$("#menu-toggle").click( function(e) {
+          e.preventDefault();
+          $("#wrapper").toggleClass("menuDisplayed");
+        });
+
+
+		var query = window.location.href.split("welcome/")[1];
+		document.getElementById('welcome').innerHTML = "User has been authenticated as: " + query;
+
+
+	</script>
+</html>

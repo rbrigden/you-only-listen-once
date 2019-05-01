@@ -29,14 +29,15 @@ class YoloProcessor:
                  load_fixtures=False):
         self.registration_split = registration_split
         self.load_external = load_external
-
         self.speaker_classification = SpeakerClassificationProcessor()
         self.embedding_processor = SpeakerEmbeddingProcessor()
         self.audio_processing = AudioProcessor()
         self.redis_conn = redis.Redis()
-
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
         # Set up processor logging
-        logging.basicConfig(filename='yolo_processor.log',
+        logging.basicConfig(
+                            filename='yolo_processor.log',
                             filemode='a',
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%H:%M:%S',

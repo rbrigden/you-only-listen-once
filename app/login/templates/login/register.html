@@ -4,53 +4,81 @@
     <meta charset="utf-8">
     <title> YOLO </title>
     {% load staticfiles %}
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
-          $(document).ready(function() {
-	          setTimeout(function(){
-	              $('body').addClass('loaded');
-	          }, 3000);
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	      });
-	  </script>
 
     <link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
-
-  </head> 
+    <link href = "https://bootswatch.com/4/solar/bootstrap.min.css" rel = "stylesheet" type = "text/css">
+  </head>  
 
   <body>
-      
-      {% if messages %}
-        <ul class="messages">
-          {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
 
-      <div id = "buttabs">
-        <input type = "button" id = "loginbut" type = "submit" value ="Login" 
-        onclick="location.href='{% url 'events' %}';" class="btn btn-primary btn-lg">
-        <input type = "button" id = "signupbut" type = "submit" onclick="location.href='{% url 'events1' %}';" value = "Register" class="btn btn-primary btn-lg">
-      </div>
-      <br>
-      <div id = "nameInfo">
-        <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
-      </div>
-      <div id = "infoReg">
-        <p id = "instr">Please say the following phrase after clicking the microphone and then re-click the button when you are done recording.</p>
-        <p id = "randphraseReg"> PlaceHolder </p>
-        <div id = "recbutsReg">
-          <input type = "button" id = "startrec" class = "record" value = "">
+
+  <body id = "registerbod">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300" type="text/css" />
+      <div id = "wrapper">
+
+        <!-- sidebar -->
+
+        <div id = "sidebar-wrapper">
+          <ul>
+            <li> <a href = "{% url 'events' %}"> Login </a> </li>
+            <br>
+            <li> <a href = "{% url 'events1' %}"> Register </a> </li>
+          </ul>
+        </div>
+
+        <div id = "page-content-wrapper">
+          <div class = "container-fluid">
+            <div class = "row">
+              <div class = "col-lg-12">
+                <a href= "#" class = "btn-btn-success" id = "menu-toggle"> 
+                  <span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>
+                </a>
+              </div>
+            </div>
+            <br>
+            <br>
+            <div class = "row" id = "body-main-content">
+              <div class = "col-lg-12">
+                <br>
+                <p id = "instr"> Please say the following phrase after entering your name and then clicking the start button.</p>
+                <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
+                <p id = "randphraseReg"> PlaceHolder </p>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+              </div>
+              <div class = "col-lg-12" id = "buts">
+                <div id = "recbuts">
+                  <input type = "button" id = "startrec" class = "record" value = "">
+                </div>
+              </div>
+              <div class = "col-lg-12">
+                <br>
+                <br>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div id = "recordings">
-        <ol id="recordingsList"></ol>
-      </div>
+
 
       <script> 
+
+      /* menu toggle */
+
+        $("#menu-toggle").click( function(e) {
+          e.preventDefault();
+          $("#wrapper").toggleClass("menuDisplayed");
+        });
+
+      /*end menu toggle */
 
         /*Code for recording from microphone reference: https://addpipe.com/blog/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/ */
 
@@ -98,6 +126,7 @@
         
         function startRecording() {
           console.log("IN START RECORDING");
+          document.getElementById("instr").innerHTML = "Please click the stop button once you are done recording.";
           var constraints = { audio: true, video:false }
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             audioContext = new AudioContext();
@@ -105,11 +134,15 @@
             input = audioContext.createMediaStreamSource(stream);
             rec = new Recorder(input,{numChannels:1})
             rec.record()
+            var buttons = document.getElementById("startrec");
+            buttons.style.background = 'url(https://resizeimage.net/mypic/m6DiGxvblxc6TLA9/wFGYX/stop.png) no-repeat';
           }).catch(function(err) {
           });
         }
 
         function stopRecording() {
+          var buttons = document.getElementById("startrec");
+          buttons.style.background = 'url(https://resizeimage.net/mypic/k8ZrFivAU6UI5ATq/RZF7M/start.png) no-repeat';
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
           rec.exportWAV(createDownloadLink);
@@ -161,8 +194,12 @@
               processData: false,
               data: formData})
                   .done(function(e){
+                    if(e['error']) {
+                      alert(e['error']);
+                    }
                   });
-            }
+          }
+          //code for background 
 
 
 
