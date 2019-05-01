@@ -23,27 +23,28 @@ class PresenceScore:
             for s in range(1, num_states+1):
                 alpha_1[s-1] = torch.logsumexp(alpha_0[max(s-2, 0):s], dim=0) + alpha_1[s-1]
             alpha_0 = alpha_1
-        return torch.exp(alpha_0[-1] - torch.logsumexp(alpha_0, dim=0))
+        return alpha_0[-1]
 
+    def _sum_paths_blank(self, trellis):
+        num_frames, num_states = trellis.size()
 
-    def get_trellis_order_chars(self, target):
-        trellis_order_chars = []
-        for idx in range(1, len(target)):
-            if target[idx-1] == target[idx]:
-                trellis_order_chars.extend([target[idx-1], '-'])
-            else:
-                trellis_order_chars.append(target[idx-1])
-        trellis_order_chars.append(target[-1])
-
-        return trellis_order_chars
-
+        alpha_0 = trellis[0].clone()
+        for t in range(1, num_frames):
+            alpha_1 = trellis[t].clone()
+            for s in range(0, num_states):
+                if s % 2 == 0:
+                    fan_in = alpha_0[max(s-1, 0):s+1]
+                else:
+                    fan_in = alpha_0[max(s-2, 1):s+1]
+                alpha_1[s] = torch.logsumexp(fan_in, dim=0) + alpha_1[s]
+            alpha_0 = alpha_1
+        return torch.logsumexp(alpha_0[-2:], dim=0)
 
     def forward(self, target, log_probs, chars):
-        trellis_order_chars = self.get_trellis_order_chars(target)
-        print(trellis_order_chars)
+        trellis_order_chars = ["-"] + [target[i // 2] if i % 2 == 0 else "-" for i in range(len(target * 2))]
         trellis_order = [chars.index(c) for c in trellis_order_chars]
         trellis = self._build_trellis(log_probs, trellis_order)
-        return self._sum_paths(trellis)
+        return self._sum_paths_blank(trellis)
 
 
 
@@ -55,11 +56,6 @@ if __name__ == '__main__':
     sr = SpeechRec("/home/rbrigden/deepspeech-models/output_graph.pb","/home/rbrigden/deepspeech-models/alphabet.txt")
 
     fs, audio = wav.read("/home/rbrigden/demo.wav")
-    seq1 = "I find it funny".lower()
-    seq2 = "its very different the funny thing is and I dont think".lower()
-    seq3 = "its".lower()
-    seq4 = "its very different the funny thing is and I dont think england".lower()
-    seq4 = "von bismarck".lower()
 
     seqs = [
         "maybe this moment works better cause some stuff on the page doesnt work as well as it does in real life",
@@ -84,6 +80,8 @@ if __name__ == '__main__':
         "hello its blocked fairs worse glam little food off a grain doesnt pond list poorly as it came in bad wild",
         "hello its blocked fairs worse glam little food off a grain doesnt pond list poorly as she came in bad wild",
         "hello its blocked fairs worse glam little food off a grain doesnt pond list poorly as she came can bad wild",
+        "hello its blocked fairs worse glam",
+
     ]
 
 
