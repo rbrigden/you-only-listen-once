@@ -125,7 +125,6 @@ class YoloProcessor:
         # Parse request data
         request_id = request["id"]
         request_type = request["type"]
-        prompt = request["prompt"]
         self.logger.log(logging.INFO, "{} request {} received".format(request_type, request_id))
 
         if request_type == "register":
@@ -140,8 +139,6 @@ class YoloProcessor:
         audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
         #U.play_audio(audio_bytes)
         processed_utterance, fs, audio_data = self.audio_processing(audio_bytes)
-
-
         embeddings = self.embedding_processor(processed_utterance)
         id_decision = self.speaker_classification.classify_speaker(embeddings.squeeze(0).numpy())
         presence_decision = self.presence_detection_processor(prompt, audio_data, fs)
