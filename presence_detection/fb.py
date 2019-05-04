@@ -2,6 +2,7 @@ import numpy as np
 from scipy.io import wavfile as wav
 import torch
 
+
 class PresenceScore:
 
     def __init__(self):
@@ -20,8 +21,8 @@ class PresenceScore:
         alpha_0 = trellis[0].clone()
         for t in range(1, num_frames):
             alpha_1 = trellis[t].clone()
-            for s in range(1, num_states+1):
-                alpha_1[s-1] = torch.logsumexp(alpha_0[max(s-2, 0):s], dim=0) + alpha_1[s-1]
+            for s in range(1, num_states + 1):
+                alpha_1[s - 1] = torch.logsumexp(alpha_0[max(s - 2, 0):s], dim=0) + alpha_1[s - 1]
             alpha_0 = alpha_1
         return alpha_0[-1]
 
@@ -33,9 +34,9 @@ class PresenceScore:
             alpha_1 = trellis[t].clone()
             for s in range(0, num_states):
                 if s % 2 == 0:
-                    fan_in = alpha_0[max(s-1, 0):s+1]
+                    fan_in = alpha_0[max(s - 1, 0):s + 1]
                 else:
-                    fan_in = alpha_0[max(s-2, 1):s+1]
+                    fan_in = alpha_0[max(s - 2, 1):s + 1]
                 alpha_1[s] = torch.logsumexp(fan_in, dim=0) + alpha_1[s]
             alpha_0 = alpha_1
         return torch.logsumexp(alpha_0[-2:], dim=0)
@@ -44,16 +45,13 @@ class PresenceScore:
         trellis_order_chars = ["-"] + [target[i // 2] if i % 2 == 0 else "-" for i in range(len(target * 2))]
         trellis_order = [chars.index(c) for c in trellis_order_chars]
         trellis = self._build_trellis(log_probs, trellis_order)
-        return self._sum_paths_blank(trellis)
-
-
-
-
+        return self._sum_paths_blank(trellis).item()
 
 
 if __name__ == '__main__':
     from presence_detection.speech_rec import SpeechRec
-    sr = SpeechRec("/home/rbrigden/deepspeech-models/output_graph.pb","/home/rbrigden/deepspeech-models/alphabet.txt")
+
+    sr = SpeechRec("/home/rbrigden/deepspeech-models/output_graph.pb", "/home/rbrigden/deepspeech-models/alphabet.txt")
 
     fs, audio = wav.read("/home/rbrigden/demo.wav")
 
@@ -84,12 +82,9 @@ if __name__ == '__main__':
 
     ]
 
-
-
     log_probs = sr.forward(audio, fs, display_chars=True)
     chars = sr.alphabet._label_to_str + ["-"]
     pscore = PresenceScore()
     for i, seq in enumerate(seqs):
         print(seq)
         print(pscore.forward(seq, log_probs, chars))
-

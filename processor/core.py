@@ -6,7 +6,7 @@ import time
 from processor.speaker_classification_processor import SpeakerClassificationProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingProcessor
 from processor.speaker_embedding_processor import SpeakerEmbeddingInference
-from processor.speech_rec_processor import SpeechRecognitionProcessor
+from processor.presence_detection_processor import PresenceDetectionProcessor
 from processor.external import load_voxceleb_embeddings
 from processor.audio_processor import AudioProcessor
 import processor.db as db_core
@@ -31,6 +31,7 @@ class YoloProcessor:
         self.load_external = load_external
         self.speaker_classification = SpeakerClassificationProcessor()
         self.embedding_processor = SpeakerEmbeddingProcessor()
+        self.presence_detection_processor = PresenceDetectionProcessor()
         self.audio_processing = AudioProcessor()
         self.redis_conn = redis.Redis()
         for handler in logging.root.handlers[:]:
@@ -124,22 +125,26 @@ class YoloProcessor:
         # Parse request data
         request_id = request["id"]
         request_type = request["type"]
+        prompt = request["prompt"]
         self.logger.log(logging.INFO, "{} request {} received".format(request_type, request_id))
 
         if request_type == "register":
             username = request['name']
             self._register(request_id, username)
         elif request_type == "authenticate":
-            self._authenticate(request_id)
+            self._authenticate(request_id, request["prompt"])
 
         return request
 
-    def _authenticate(self, id_):
+    def _authenticate(self, id_, prompt):
         audio_bytes = self.redis_conn.get('audio:{}'.format(id_))
         #U.play_audio(audio_bytes)
-        processed_utterance = self.audio_processing(audio_bytes)
+        processed_utterance, fs, audio_data = self.audio_processing(audio_bytes)
+
+
         embeddings = self.embedding_processor(processed_utterance)
         id_decision = self.speaker_classification.classify_speaker(embeddings.squeeze(0).numpy())
+        presence_decision = self.presence_detection_processor(prompt, audio_data, fs)
 
         if id_decision is None:
             user = None
@@ -149,7 +154,9 @@ class YoloProcessor:
         # Send the result to the client
         self.redis_conn.set("result:{}".format(id_), "Unknown" if user is None else user.username)
 
-        self.logger.log(logging.INFO, "Decision is: {}".format("Unknown" if user is None else user.username))
+        self.logger.log(logging.INFO, "ID Decision is: {}".format("Unknown" if user is None else user.username))
+        self.logger.log(logging.INFO, "Presence Decision is: {}".format(presence_decision))
+
         self.logger.log(logging.INFO, "Authentication complete for request {}".format(id_))
         return user
 
@@ -160,7 +167,7 @@ class YoloProcessor:
         user.save()
 
         audio_bytes = self.redis_conn.get('audio:{}'.format(request_id))
-        processed_utterances = self.audio_processing(audio_bytes, split=4)
+        processed_utterances, _, _ = self.audio_processing(audio_bytes, split=4)
         embeddings = self.embedding_processor(processed_utterances)
         embeddings = embeddings.numpy()
 
