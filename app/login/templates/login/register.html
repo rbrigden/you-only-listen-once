@@ -25,9 +25,9 @@
 
         <div id = "sidebar-wrapper">
           <ul>
-            <li> <a href = "{% url 'events' %}"> Login </a> </li>
+            <li> <a href = "{% url 'login' %}"> Login </a> </li>
             <br>
-            <li> <a href = "{% url 'events1' %}"> Register </a> </li>
+            <li> <a href = "{% url 'register' %}"> Register </a> </li>
           </ul>
         </div>
 
@@ -67,25 +67,6 @@
                 <br>
               </div>
             </div>
-            <div class = "row" id = "animation-body">
-              <div id="bars">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <br>
-                <br>
-              </div>
-              <br>
-              <br>
-              <br>
-            </div>
           </div>
         </div>
       </div>
@@ -102,7 +83,7 @@
 
       /*end menu toggle */
 
-        /*Code for recording from microphone reference: https://addpipe.com/blog/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/ */
+      /*Code for recording from microphone reference: https://addpipe.com/blog/using-recorder-js-to-capture-wav-audio-in-your-html5-web-site/ */
 
         URL = window.URL || window.webkitURL;
 
@@ -112,9 +93,7 @@
         var AudioContext = window.AudioContext || window.webkitAudioContext;
         var audioContext 
         var recordButton = document.getElementById("startrec");
-        //var stopButton = document.getElementById("stoprec");
         recordButton.addEventListener("click", start_stop);
-        //stopButton.addEventListener("click", stopRecording);
 
         window.onload = function() {
           getText();
@@ -223,9 +202,11 @@
                     if(e['error']) {
                       alert(e['error']);
                     }
+                    else{
+                      alert('You have been registered!');
+                    }
                   });
           }
-          //code for background 
 
 
 
