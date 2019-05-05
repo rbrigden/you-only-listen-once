@@ -117,7 +117,7 @@ class YoloProcessor:
     def _init_db(self):
         db = db_core.get_db_conn()
         db.connect()
-        db.create_tables([db_core.User, db_core.Embedding, db_core.Audio, db_core.SpeakerModel])
+        db.create_tables([db_core.User, db_core.Embedding, db_core.Audio, db_core.SpeakerModel, db_core.SpeakerModelSVM])
         return db
 
     def _process(self, request):

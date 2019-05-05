@@ -11,9 +11,12 @@ import logging
 import gin
 
 
+@gin.configurable
 class SpeakerClassificationProcessor:
 
-    def __init__(self):
+    def __init__(self, mode='lr'):
+        self.mode = mode
+
         self.redis_conn = redis.Redis()
         self.logger = logging.getLogger('SpeakerClassificationProcessor')
 
@@ -70,14 +73,23 @@ class SpeakerClassificationProcessor:
                 embeddings_train = external_embeddings_train
                 embeddings_val = external_embeddings_val
 
-            model = self.getLogisticRegressionParams(pos_embeddings, embeddings_train)
-            eer_labels, scores = self.get_eer_inputs(model, embeddings_val, pos_embeddings)
+            lr_model = self.getLogisticRegressionParams(pos_embeddings, embeddings_train)
+            svm_model = self.getSVMParams(pos_embeddings, embeddings_train)
+
+            lr_eer_labels, lr_scores = self.get_eer_inputs(lr_model, embeddings_val, pos_embeddings)
+            svm_eer_labels, svm_scores = self.get_eer_inputs(svm_model, embeddings_val, pos_embeddings)
 
             # Calculate EER and Probability-Threshold for Each Speaker
-            eer_, threshold = eer.EER(eer_labels, scores)
+            lr_eer, lr_threshold = eer.EER(lr_eer_labels, lr_scores)
+            svm_eer, svm_threshold = eer.EER(svm_eer_labels, svm_scores)
+
+
             internal_user = db_core.User.get(db_core.User.id == internal_id)
-            self.logger.info("Speaker Model for {}. EER: {}, Thresh: {}".format(internal_user.username, float(eer_), float(threshold)))
-            db_core.write_speaker_model(internal_user, model, float(threshold))
+            self.logger.info("LR Speaker Model for {}. EER: {}, Thresh: {}".format(internal_user.username, float(lr_eer), float(lr_threshold)))
+            self.logger.info("SVM Speaker Model for {}. EER: {}, Thresh: {}".format(internal_user.username, float(svm_eer), float(svm_threshold)))
+
+            db_core.write_speaker_model(internal_user, lr_model, float(lr_threshold))
+            db_core.write_speaker_model_svm(internal_user, svm_model, float(svm_threshold))
 
 
     def classify_speaker(self, embedding):
@@ -89,7 +101,14 @@ class SpeakerClassificationProcessor:
         """
 
         users = [user for user in db_core.User.select()]
-        speaker_models, thresholds = zip(*[db_core.load_speaker_model(user, sklearn.linear_model.LogisticRegression(solver='liblinear', class_weight='balanced')) for user in users])
+
+        if self.mode == 'lr':
+            speaker_models, thresholds = zip(*[db_core.load_speaker_model(user, sklearn.linear_model.LogisticRegression(solver='liblinear', class_weight='balanced')) for user in users])
+        elif self.mode == 'svm':
+            speaker_models, thresholds = zip(*[db_core.load_speaker_model_svm(user) for user in users])
+        else:
+            raise ValueError("Invalid mode")
+
         user_ids = [user.id for user in users]
 
         targets = self.get_target(user_ids, speaker_models, thresholds, embedding)
@@ -114,6 +133,21 @@ class SpeakerClassificationProcessor:
         YLab = np.concatenate((positiveLabels, negativeLabels))
         f = sklearn.linear_model.LogisticRegression(solver='liblinear', class_weight=None).fit(XLab, YLab)
         return f
+
+    def getSVMParams(self, positives, negatives):
+        """ Train for Each Speaker vs Rest-Of-Speakers. One vs Rest Binary Classification
+
+        :param target: (Z, D) matrix which contains Z D-dimensional embeddings for Z utterances ofpostive-Labeled speaker that is to be classified
+        :return: Logistic Regression model for target-speaker
+        """
+
+        positiveLabels = np.ones(len(positives))
+        negativeLabels = np.zeros(len(negatives))
+        XLab = np.concatenate((positives, negatives), axis=0)
+        YLab = np.concatenate((positiveLabels, negativeLabels))
+        f = sklearn.svm.SVC(gamma='scale', probability=True, class_weight='balanced').fit(XLab, YLab)
+        return f
+
 
     def get_eer_inputs(self, model, embeddings_val, pos_embeddings):
         """ For a particular model, get list of EER labels and scores to pass into EER function
@@ -220,5 +254,5 @@ if __name__ == '__main__':
 
     db = db_core.get_db_conn()
     db.connect()
-    db.create_tables([db_core.User, db_core.Embedding, db_core.Audio, db_core.SpeakerModel])
+    db.create_tables([db_core.User, db_core.Embedding, db_core.Audio, db_core.SpeakerModel, db_core.SpeakerModelSVM])
     main()
