@@ -22,9 +22,9 @@
 
         <div id = "sidebar-wrapper">
           <ul>
-            <li> <a href = "{% url 'events' %}"> Login </a> </li>
+            <li> <a href = "{% url 'login' %}"> Login </a> </li>
             <br>
-            <li> <a href = "{% url 'events1' %}"> Register </a> </li>
+            <li> <a href = "{% url 'register' %}"> Register </a> </li>
           </ul>
         </div>
 
@@ -46,8 +46,7 @@
               <div class = "col-lg-12">
                 <br>
                 <p id = "instr"> Please say the following phrase after clicking the start button.</p>
-                <p id = "randphrase"> Insects do not breathe as in the higher animals by taking the air into
-the mouth and filling the lungs, but there are a series of holes </p>
+                <p id = "randphrase"> PlaceHolder </p>
                 <br>
                 <br>
                 <br>
@@ -64,7 +63,7 @@ the mouth and filling the lungs, but there are a series of holes </p>
                 <br>
               </div>
             </div>
-            <div class = "row" id = "animation-body">
+            <div class = "row" id = "animation-body" style="display: none;">
               <div id="bars">
                 <div class="bar"></div>
                 <div class="bar"></div>
@@ -136,10 +135,11 @@ the mouth and filling the lungs, but there are a series of holes </p>
         }
 
         window.onload = function() {
-          getText();
+          sentence();
         };
 
         function stopRecording() {
+          document.getElementById('animation-body').style.display = 'block';
           var buttons = document.getElementById("startrec1");
           buttons.style.background = 'url(https://i.ibb.co/C5zk8Rk/start-82x82.png) no-repeat';
           rec.stop();
@@ -189,61 +189,37 @@ the mouth and filling the lungs, but there are a series of holes </p>
 		        data: formData})
 		            .done(function(e){
                   var name = e['username'];
-                  if(name != "None") {
-                      location.href = "/welcome/" + name;
+
+                  if(name != "None"){
+                    console.log("IN IFFFFFF")
+                    location.href="/welcome/"+name;
                   }
-                  else {
-                      alert("User was not found!");
+                  else{
+                    console.log("IN ELSE!!!!!!")
+                    alert("User was not found!");
+                    document.getElementById('animation-body').style.display = 'none';
                   }
-		            });
+                    });
           }
 
+        /*Sentence Generation */
 
-          var passageOpts = [
-        'Far out in the uncharted backwaters of the unfashionable  end  of the  western  spiral  arm  of  the Galaxy lies a small unregarded yellow sun. Orbiting this at a distance of roughly ninety-two  million  miles is  an  utterly insignificant little blue green planet whose ape- descended life forms are so amazingly primitive that  they still think digital watches are a pretty neat idea.', 
-         'This planet has - or rather had - a problem, which was this: most of  the  people  on  it were unhappy for pretty much of the time. Many solutions were suggested for this problem, but most of these were  largely  concerned with the movements of small green pieces of paper, which is odd because on the whole it wasnt  the  small green pieces of paper that were unhappy.', 
-        'Many were increasingly of the opinion that theyd all made a  big mistake  in  coming  down  from the trees in the first place. And some said that even the trees had been a bad move,  and  that  no one should ever have left the oceans. And then, one Thursday, nearly two thousand years after  one  man had  been nailed to a tree for saying how great it would be to be nice to people for a change, one girl sitting on  her  own  in  a small  cafe  in  Rickmansworth suddenly realized what it was that had been going wrong all this time, and she finally knew how  the world  could  be  made  a  good and happy place.']
-
-        function getText(){
-          console.log('in gettext register')
-          item = passageOpts[Math.floor(Math.random()*passageOpts.length)];
-          console.log(item)
-          document.getElementById("randphrase").innerHTML = item;
-        }
+        var verbs, nouns, adjectives, adverbs, preposition;
+        nouns = ["bird", "clock", "boy", "plastic", "duck", "teacher", "old lady", "professor", "hamster", "dog", "accelerator", "accordion", "account", "accountant", "acknowledgment", "acoustic", "acrylic", "act", "action", "active", "activity", "actor", "actress", "adapter", "addition", "address", "adjustment", "adult", "advantage", "advertisement", "advice", "afghanistan", "africa", "aftermath", "afternoon", "aftershave", "afterthought", "age", "agenda", "agreement", "air", "airbus", "airmail", "airplane", "airport", "airship", "alarm", "albatross", "alcohol", "algebra", "algeria", "alibi", "alley", "alligator", "alloy", "almanac", "alphabet", "alto", "aluminium", "aluminum", "ambulance", "america", "amount", "amusement", "anatomy", "anethesiologist", "anger", "angle", "angora", "animal", "anime", "ankle"];
+        var verbs = ["accept", "add", "admire", "admit", "advise", "afford", "agree", "alert", "allow", "amuse", "analyse", "announce", "annoy", "answer", "apologise", "appear", "applaud", "appreciate", "approve", "argue", "arrange", "arrest", "arrive", "ask", "attach", "attack", "attempt", "attend", "attract", "avoid", "back", "bake", "balance", "ban", "bang", "bare", "bat", "bathe", "battle", "beam", "beg", "behave", "belong", "bleach", "bless", "blind", "blink", "blot", "blush", "boast", "boil", "bolt", "bomb", "book", "bore", "borrow", "bounce", "bow", "box", "brake", "branch", "breathe", "bruise", "brush", "bubble", "bump", "burn", "bury", "buzz", "calculate", "call", "camp", "care", "carry", "carve", "cause", "challenge", "change", "charge", "chase", "cheat", "check", "cheer", "chew", "choke", "chop", "claim", "clap", "clean", "clear", "clip", "close", "coach", "coil", "collect", "colour", "comb", "command", "communicate", "compare", "compete", "complain", "complete", "concentrate", "concern", "confess", "confuse", "connect", "consider", "consist", "contain", "continue", "copy", "correct", "cough", "count", "cover", "crack", "crash", "crawl", "cross", "crush", "cry", "cure", "curl", "curve", "cycle", "dam", "damage", "dance", "dare", "decay", "deceive", "decide", "decorate", "delay", "delight", "deliver", "depend", "describe", "desert", "deserve", "destroy", "detect", "develop", "disagree", "disappear", "disapprove", "disarm", "discover", "dislike", "divide", "double", "doubt", "drag", "drain", "dream", "dress", "drip", "drop", "drown", "drum", "dry", "dust", "earn", "educate", "embarrass", "employ", "empty", "encourage", "end", "enjoy", "enter", "entertain", "escape", "examine", "excite", "excuse", "exercise", "exist", "expand", "expect", "explain", "explode", "extend", "face", "fade", "fail", "fancy", "fasten", "fax", "fear", "fence", "fetch", "file", "fill", "film", "fire", "fit", "fix", "flap", "flash", "float", "flood", "flow", "flower", "fold", "follow", "fool", "force", "form", "found", "frame", "frighten", "fry", "gather", "gaze", "glow", "glue", "grab", "grate", "grease", "greet", "grin", "grip", "groan", "guarantee", "guard", "guess", "guide", "hammer", "hand", "handle", "hang", "happen", "harass", "harm", "hate", "haunt", "head", "heal", "heap", "heat", "help", "hook", "hop", "hope", "hover", "hug", "hum", "hunt", "hurry", "identify", "ignore", "imagine", "impress", "improve", "include", "increase", "influence", "inform", "inject", "injure", "instruct", "intend", "interest", "interfere", "interrupt", "introduce", "invent", "invite", "irritate", "itch", "jail", "jam", "jog", "join", "joke", "judge", "juggle", "jump", "kick", "kill", "kiss", "kneel", "knit", "knock", "knot", "label", "land", "last", "laugh", "launch", "learn", "level", "license", "lick", "lie", "lighten", "like", "list", "listen", "live", "load", "lock", "long", "look", "love", "man", "manage", "march", "mark", "marry", "match", "mate", "matter", "measure", "meddle", "melt", "memorise", "mend", "mess up", "milk", "mine", "miss", "mix", "moan", "moor", "mourn", "move", "muddle", "mug", "multiply", "murder", "nail", "name", "need", "nest", "nod", "note", "notice", "number", "obey", "object", "observe", "obtain", "occur", "offend", "offer", "open", "order", "overflow", "owe", "own", "pack", "paddle", "paint", "park", "part", "pass", "paste", "pat", "pause", "peck", "pedal", "peel", "peep", "perform", "permit", "phone", "pick", "pinch", "pine", "place", "plan", "plant", "play", "please", "plug", "point", "poke", "polish", "pop", "possess", "post", "pour", "practise", "pray", "preach", "precede", "prefer", "prepare", "present", "preserve", "press", "pretend", "prevent", "prick", "print", "produce", "program", "promise", "protect", "provide", "pull", "pump", "punch", "puncture", "punish", "push", "question", "queue", "race", "radiate", "rain", "raise", "reach", "realise", "receive", "recognise", "record", "reduce", "reflect", "refuse", "regret", "reign", "reject", "rejoice", "relax", "release", "rely", "remain", "remember", "remind", "remove", "repair", "repeat", "replace", "reply", "report", "reproduce", "request", "rescue", "retire", "return", "rhyme", "rinse", "risk", "rob", "rock", "roll", "rot", "rub", "ruin", "rule", "rush", "sack", "sail", "satisfy", "save", "saw", "scare", "scatter", "scold", "scorch", "scrape", "scratch", "scream", "screw", "scribble", "scrub", "seal", "search", "separate", "serve", "settle", "shade", "share", "shave", "shelter", "shiver", "shock", "shop", "shrug", "sigh", "sign", "signal", "sin", "sip", "ski", "skip", "slap", "slip", "slow", "smash", "smell", "smile", "smoke", "snatch", "sneeze", "sniff", "snore", "snow", "soak", "soothe", "sound", "spare", "spark", "sparkle", "spell", "spill", "spoil", "spot", "spray", "sprout", "squash", "squeak", "squeal", "squeeze", "stain", "stamp", "stare", "start", "stay", "steer", "step", "stir", "stitch", "stop", "store", "strap", "strengthen", "stretch", "strip", "stroke", "stuff", "subtract", "succeed", "suck", "suffer", "suggest", "suit", "supply", "support", "suppose", "surprise", "surround", "suspect", "suspend", "switch", "talk", "tame", "tap", "taste", "tease", "telephone", "tempt", "terrify", "test", "thank", "thaw", "tick", "tickle", "tie", "time", "tip", "tire", "touch", "tour", "tow", "trace", "trade", "train", "transport", "trap", "travel", "treat", "tremble", "trick", "trip", "trot", "trouble", "trust", "try", "tug", "tumble", "turn", "twist", "type", "undress", "unfasten", "unite", "unlock", "unpack", "untidy", "use", "vanish", "visit", "wail", "wait", "walk", "wander", "want", "warm", "warn", "wash", "waste", "watch", "water", "wave", "weigh", "welcome", "whine", "whip", "whirl", "whisper", "whistle", "wink", "wipe", "wish", "wobble", "wonder", "work", "worry", "wrap", "wreck", "wrestle", "wriggle", "x-ray", "yawn", "yell", "zip", "zoom"];
+        adjectives = ["beautiful", "lazy", "professional", "lovely", "dumb", "rough", "soft", "hot", "vibrating", "slimy", "aback","abaft","abandoned","abashed","aberrant","abhorrent","abiding","abject","ablaze","able","abnormal","aboard","aboriginal","abortive","abounding","abrasive","abrupt","absent","absorbed","absorbing","abstracted","absurd","abundant","abusive","acceptable","accessible","accidental","accurate","acid","acidic","acoustic","acrid","actually","ad","hoc","adamant","adaptable","addicted","adhesive","adjoining","adorable","adventurous","afraid","aggressive","agonizing","agreeable","ahead","ajar","alcoholic","alert","alike","alive","alleged","alluring","aloof","amazing","ambiguous","ambitious","amuck","amused","amusing","ancient","angry","animated","annoyed","annoying","anxious","apathetic","aquatic","aromatic","arrogant","ashamed","aspiring","assorted","astonishing","attractive","auspicious","automatic","available","average","awake","aware","awesome","awful","axiomatic","bad","barbarous","bashful","bawdy","beautiful","befitting","belligerent","beneficial","bent","berserk","best","better","bewildered","big","billowy","bite-sized","bitter","bizarre","black","black-and-white","bloody","blue"];
+        adverbs = ["slowly", "elegantly", "precisely", "quickly", "sadly", "humbly", "proudly", "shockingly", "calmly", "passionately"];
+        preposition = ["down", "into", "up", "on", "upon", "below", "above", "through", "across", "towards"];
 
 
-/*
-        function getText(){
-          // read text from URL location
-          
-          console.log('in start function')
-          var request = new XMLHttpRequest();
-          request.open('GET', 'https://github.com/git/git/blob/master/Documentation/git.txt', false);
-          request.send(null);
-          request.onreadystatechange = function () {
-          	  console.log('in getText')
-              if (request.readyState === 4 && request.status === 200) {
-                  var type = request.getResponseHeader('Content-Type');
-                  if (type.indexOf("text") !== 1) {
-                  	  console.log('in second IF')
-                      text = request.responseText;
-                      console.log(text)
-                      text = text.split('\n');
-                      length_array = text.length;
-                      word1 = text[getRandomInt(length_array)];
-                      word2 = text[getRandomInt(length_array)];
-                      word3 = text[getRandomInt(length_array)];
-                      word4 = text[getRandomInt(length_array)];
-                      word5 = text[getRandomInt(length_array)];
-                      var new__phrase = [];
-                      new__phrase.push(word1," ",word2," ", word3, " ", word4, " ", word5);
-                      document.getElementById("randphrase").innerHTML = new__phrase.join("");
-                      return;
-                  }
-              }
-            }
-        }
-        */
+        function sentence() {
+          var content1 = "The " + adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)] + " " + adverbs[Math.floor(Math.random() * adverbs.length)] + " " + verbs[Math.floor(Math.random() * verbs.length)] + " because some " + nouns[Math.floor(Math.random() * nouns.length)] + " " + adverbs[Math.floor(Math.random() * adverbs.length)] + " " + verbs[Math.floor(Math.random() * verbs.length)] + " " + preposition[Math.floor(Math.random() * preposition.length)] + " a " + adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)] + " which, became a " + adjectives[Math.floor(Math.random() * adjectives.length)] + ", " + adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)] + ". ";
+          var content2 = "The " + adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)] + " " + adverbs[Math.floor(Math.random() * adverbs.length)] + " " + verbs[Math.floor(Math.random() * verbs.length)] + " because some " + nouns[Math.floor(Math.random() * nouns.length)] + " " + adverbs[Math.floor(Math.random() * adverbs.length)] + " " + verbs[Math.floor(Math.random() * verbs.length)] + " " + preposition[Math.floor(Math.random() * preposition.length)] + " a " + adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)] + " which, became a " + adjectives[Math.floor(Math.random() * adjectives.length)] + ", " + adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)] + ".";
+          item = content1 + content2;
+          document.getElementById('randphrase').innerHTML = "&quot;" + content1 + content2 + "&quot;";
+        };
+
+        /*End of sentence generation */
 
         function sleep(ms) {
           return new Promise(resolve => setTimeout(resolve, ms));

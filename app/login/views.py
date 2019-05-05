@@ -55,7 +55,7 @@ def hash_blob(blob):
 
 # Create your views here.
 @csrf_exempt
-def events(request):
+def login(request):
     User.objects.all().delete()
     print('in events')
     print(request.method)
@@ -113,7 +113,7 @@ def error(request):
 
 
 @csrf_exempt
-def events1(request):
+def register(request):
     if request.method == "POST":
         if 'name' in request.POST:
             name = request.POST['name']
