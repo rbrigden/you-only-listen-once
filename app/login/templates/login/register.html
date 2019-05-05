@@ -11,7 +11,7 @@
 
 
     <link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
-    <link href = "https://bootswatch.com/4/solar/bootstrap.min.css" rel = "stylesheet" type = "text/css">
+    <link href = "https://bootswatch.com/4/minty/bootstrap.min.css" rel = "stylesheet" type = "text/css">
   </head>  
 
   <body>
@@ -37,6 +37,9 @@
               <div class = "col-lg-12">
                 <a href= "#" class = "btn-btn-success" id = "menu-toggle"> 
                   <span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>
+                  <div id  ="logo_img">
+                    <img src = "https://i.ibb.co/f9kDp9Y/1bd9cbba-6871-40ea-8001-e77bd4f24bfc.png">
+                  </div>
                 </a>
               </div>
             </div>
@@ -63,6 +66,25 @@
                 <br>
                 <br>
               </div>
+            </div>
+            <div class = "row" id = "animation-body">
+              <div id="bars">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <br>
+                <br>
+              </div>
+              <br>
+              <br>
+              <br>
             </div>
           </div>
         </div>
@@ -135,18 +157,22 @@
             rec = new Recorder(input,{numChannels:1})
             rec.record()
             var buttons = document.getElementById("startrec");
-            buttons.style.background = 'url(https://resizeimage.net/mypic/m6DiGxvblxc6TLA9/wFGYX/stop.png) no-repeat';
+            buttons.style.background = 'url(https://i.ibb.co/fSRFf2q/stop-82x82.png) no-repeat';
           }).catch(function(err) {
           });
         }
 
         function stopRecording() {
           var buttons = document.getElementById("startrec");
-          buttons.style.background = 'url(https://resizeimage.net/mypic/k8ZrFivAU6UI5ATq/RZF7M/start.png) no-repeat';
+          buttons.style.background = 'url(https://i.ibb.co/C5zk8Rk/start-82x82.png) no-repeat';
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
-          rec.exportWAV(createDownloadLink);
-          //alert("Thank you for registering!")
+          if(document.getElementById("nameInp").value == ""){
+            alert("Please enter a username in the text box.");
+          }
+          else{
+            rec.exportWAV(createDownloadLink);
+          }
         }
 
         function getCSRFToken() {
