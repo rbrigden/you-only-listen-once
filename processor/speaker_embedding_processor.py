@@ -19,15 +19,10 @@ class SpeakerEmbeddingProcessor:
     def __call__(self, spect_batch):
         return self.forward(spect_batch)
 
-
-def normalize(x, mean, variance):
-    return (x - mean.reshape(1, -1)) / np.sqrt(variance.reshape(1, -1))
-
 @gin.configurable
 class SpeakerEmbeddingInference:
 
-    def __init__(self, model, stats_path, use_gpu=False):
-        self.mean, self.variance, _ = np.load(stats_path)
+    def __init__(self, model, use_gpu=False):
         self.model = model.cuda() if use_gpu else model
         self.use_gpu = use_gpu
 
@@ -37,7 +32,7 @@ class SpeakerEmbeddingInference:
         :return: embedding matrix (N, D)
         """
         self.model.eval()
-        utterance_batch = [normalize(u, self.mean, self.variance) for u in utterance_batch]
+        utterance_batch = [u for u in utterance_batch]
         seq_batch, seq_lens = process_data_batch(utterance_batch, mode="wrap")
         seq_batch = seq_batch.cuda() if self.use_gpu else seq_batch
         with torch.no_grad():
