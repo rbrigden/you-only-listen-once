@@ -31,15 +31,15 @@ class VerificationEvaluator:
         return voxceleb.VoxcelebVerification.build(veri_file_path, self.processed_test_root)
 
     def evaluate(self, model, num_workers=8):
-        batch_size = 20
+        batch_size = 16
         enrol_loader = DataLoader(self.enrol_set, shuffle=False, num_workers=num_workers//2, batch_size=batch_size,
                                   collate_fn=voxceleb.voxceleb_veri_collate)
         test_loader = DataLoader(self.test_set, shuffle=False, num_workers=num_workers//2, batch_size=batch_size,
                                  collate_fn=voxceleb.voxceleb_veri_collate)
 
         embedding_size = model.embedding_size
-        enrol_embeddings = torch.zeros((len(self.enrol_set), embedding_size)).cuda()
-        test_embeddings = torch.zeros((len(self.test_set), embedding_size)).cuda()
+        enrol_embeddings = torch.zeros((len(self.enrol_set), embedding_size))
+        test_embeddings = torch.zeros((len(self.test_set), embedding_size))
 
         for idx, (enrol_batch,) in enumerate(enrol_loader):
             enrol_batch, enrol_seq_lens = U.process_data_batch(enrol_batch, mode=self.pad_mode)
@@ -47,7 +47,7 @@ class VerificationEvaluator:
             bsize = enrol_batch.size()[0]
             bidx = idx * bsize
             with torch.no_grad():
-                enrol_embeddings[bidx:bidx + bsize, :] = model.forward([enrol_batch, enrol_seq_lens], em=True)
+                enrol_embeddings[bidx:bidx + bsize, :] = model.forward([enrol_batch, enrol_seq_lens], em=True).cpu()
 
         for idx, (test_batch,) in enumerate(test_loader):
             test_batch, test_seq_lens = U.process_data_batch(test_batch, mode=self.pad_mode)
@@ -55,7 +55,7 @@ class VerificationEvaluator:
             bsize = test_batch.size()[0]
             bidx = idx * bsize
             with torch.no_grad():
-                test_embeddings[bidx:bidx + bsize, :] = model.forward([test_batch, test_seq_lens], em=True)
+                test_embeddings[bidx:bidx + bsize, :] = model.forward([test_batch, test_seq_lens], em=True).cpu()
 
         scores = []
         for enrol_idx, test_idx in zip(self.enrol_set.sample_idxs, self.test_set.sample_idxs):

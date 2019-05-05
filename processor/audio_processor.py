@@ -6,6 +6,8 @@ import librosa
 from pydub import AudioSegment
 import numpy as np
 from io import BytesIO
+import speechpy
+from scipy.io import wavfile
 
 @gin.configurable
 class AudioProcessor:
@@ -35,53 +37,28 @@ class AudioProcessor:
             for segment in segments:
                 segment.export("temp.wav", format='wav')
                 with open("temp.wav", 'rb') as f:
-                    data, source_sample_rate = sf.read(f)
+                    source_sample_rate, data = sf.read(f)
                 self.logger.info("Source sample rate is {}".format(source_sample_rate))
-
-                if self.default_sample_rate is not None:
-                    target_sample_rate = self.default_sample_rate
-                    data = librosa.resample(data, orig_sr=source_sample_rate, target_sr=target_sample_rate)
-                else:
-                    target_sample_rate = source_sample_rate
-
-                self.logger.info("Target sample rate is {}".format(target_sample_rate))
-
-                mel = librosa.feature.melspectrogram(y=data, sr=target_sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
-                all_mels.append(mel.T)
+                mel = speechpy.feature.lmfe(data, sampling_frequency=source_sample_rate, num_filters=64)
+                mel = mel - np.mean(mel, axis=0, dtype=np.float64)
+                all_mels.append(mel)
         else:
-            data, source_sample_rate = sf.read(audio_stream)
+            source_sample_rate, data = sf.read(audio_stream)
             self.logger.info("Source sample rate is {}".format(source_sample_rate))
+            mel = speechpy.feature.lmfe(data, sampling_frequency=source_sample_rate, num_filters=64)
+            mel = mel - np.mean(mel, axis=0, dtype=np.float64)
+            all_mels.append(mel)
 
-            if self.default_sample_rate is not None:
-                target_sample_rate = self.default_sample_rate
-                data = librosa.resample(data, orig_sr=source_sample_rate, target_sr=target_sample_rate)
-            else:
-                target_sample_rate = source_sample_rate
+        return all_mels, source_sample_rate, data
 
-            self.logger.info("Target sample rate is {}".format(target_sample_rate))
-
-            mel = librosa.feature.melspectrogram(y=data, sr=target_sample_rate, n_fft=self.window_size,
-                                                 n_mels=self.num_feats)
-            all_mels.append(mel.T)
-
-
-        return all_mels
 
     def from_file(self, path):
-        data, source_sample_rate = librosa.load(path)
+        source_sample_rate, data = wavfile.read(path)
 
         self.logger.info("Source sample rate is {}".format(source_sample_rate))
-
-        if self.default_sample_rate is not None:
-            target_sample_rate = self.default_sample_rate
-            data = librosa.resample(data, orig_sr=source_sample_rate, target_sr=target_sample_rate)
-        else:
-            target_sample_rate = source_sample_rate
-
-        self.logger.info("Target sample rate is {}".format(target_sample_rate))
-
-        mel = librosa.feature.melspectrogram(y=data, sr=target_sample_rate, n_fft=self.window_size, n_mels=self.num_feats)
-        return [mel.T]
+        mel = speechpy.feature.lmfe(data, sampling_frequency=source_sample_rate, num_filters=64)
+        mel = mel - np.mean(mel, axis=0, dtype=np.float64)
+        return [mel]
 
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)

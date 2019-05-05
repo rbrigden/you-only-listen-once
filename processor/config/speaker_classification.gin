@@ -9,4 +9,4 @@
 redis.Redis.port = 6379
 redis.Redis.host = "127.0.0.1"
 
-main.mode = "retrain_speaker_models"
+main.mode = "plot_embeddings"

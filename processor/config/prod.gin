@@ -18,6 +18,9 @@ load_voxceleb_embeddings.voxceleb_wav_path = "/home/rbrigden/voxceleb/wav"
 YoloProcessor.load_external = True
 load_voxceleb_embeddings.n = 50
 
+# PRESENCE DETECTION PROCESSOR
+PresenceDetectionProcessor.threshold = -500
+
 # CLASSIFICATION PROCESSOR
 sklearn.linear_model.LogisticRegression.solver = 'liblinear'
 sklearn.linear_model.LogisticRegression.penalty = 'l2'

@@ -1,0 +1,2 @@
+SpeechRec.model_path = "/home/rbrigden/deepspeech-models/output_graph.pb"
+SpeechRec.alphabet_path = "/home/rbrigden/deepspeech-models/alphabet.txt"

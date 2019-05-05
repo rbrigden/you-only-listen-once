@@ -91,10 +91,17 @@ class IdentifyAndEmbed(nn.Module):
         )
 
         self.pool = nn.Sequential(AvgPool(2), Flatten())
-        self.embedding_size = 64
+        self.embedding_size = 256
         self.embedding = nn.Linear(768, self.embedding_size)
         # self.ln = nn.LayerNorm(self.embedding_size)
         self.classification = nn.Linear(self.embedding_size, nspeakers)
+
+        # for m in self.modules():
+        #     if isinstance(m, nn.Conv2d):
+        #         nn.init.kaiming_normal_(m.weight, mode='fan_out')
+        #     elif isinstance(m, nn.BatchNorm2d):
+        #         nn.init.constant_(m.weight, 1)
+        #         nn.init.constant_(m.bias, 0)
 
     def _make_mask(self, utterance_shape, features_shape, seq_lens):
         _, _, ut, _ = utterance_shape
@@ -110,16 +117,15 @@ class IdentifyAndEmbed(nn.Module):
         """ Set em to skip the classification"""
         x, seq_lens = xs
         out = self.net(x)
-        # mask = self._make_mask(x.shape, out.shape, seq_lens)
-        # out *= mask
         out = self.pool(out)
         z = self.embedding(out)
-        z = 10 * nn.functional.normalize(z, p=2, dim=1)
-        # z = F.elu(z, inplace=True)
         if em:
             return z
+        z = 16 * nn.functional.normalize(z, p=2, dim=1)
         c = self.classification(z)
         return F.log_softmax(c, dim=1), z
+
+
 
 
 class DenseNetWithEmbeddings(torchvision.models.DenseNet):
@@ -264,7 +270,87 @@ class SimpleRecurrentEmbedAndIdentify(nn.Module):
         return F.log_softmax(c, dim=1), embedding
 
 
+def conv5x5_(in_channels, out_channels, stride):
+    return nn.Conv2d(in_channels, out_channels, 5, padding=0, stride=stride, bias=False)
 
 
+def conv3x3_(in_channels, out_channels):
+    return nn.Conv2d(in_channels, out_channels, 3, padding=1, stride=1, bias=False)
 
 
+class Block(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(Block, self).__init__()
+        self.conv1 = conv3x3_(in_channels, out_channels)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.conv2 = conv3x3_(out_channels, out_channels)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.act = nn.ELU(inplace=True)
+
+    def forward(self, x):
+        residual = x
+        out = self.act(self.bn1(self.conv1(x)))
+        return self.act(residual + self.bn2(self.conv2(out)))
+
+
+class Group(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=None, pool=False):
+        super(Group, self).__init__()
+        self.conv = conv5x5_(in_channels, out_channels, stride=stride)
+        self.block1 = Block(out_channels, out_channels)
+        self.act = nn.ELU(inplace=True)
+        self.pool = pool
+
+    def forward(self, x):
+        x = self.act(self.conv(x))
+        if self.pool:
+            x = F.max_pool2d(x, kernel_size=2, stride=2)
+
+        return self.block1(x)
+
+
+class ResNet(nn.Module):
+    def __init__(self, nspeakers):
+        super(ResNet, self).__init__()
+        self.group1 = Group(1, 32, stride=2)
+        self.group2 = Group(32, 64, stride=2)
+        self.group3 = Group(64, 128, stride=2)
+        self.group4 = Group(128, 256, stride=2)
+        self.printed = False
+
+        self.classifier = nn.Linear(256, nspeakers)
+        self.act = nn.ELU(inplace=True)
+
+        self.embedding_size = 256
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out')
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, x, em=False):
+        embed = em
+        x, seq_lens = x
+        bsize = x.size(0)
+
+        x = self.group1(x)
+        x = self.group2(x)
+        x = self.group3(x)
+        x = self.group4(x)
+
+        if not self.printed:
+            print(x.shape)
+            self.printed = True
+
+        x = x.mean(dim=3).mean(dim=2).view(bsize, -1)  # Temporal Avg-Pool
+
+        embeddings = x
+
+        if embed:
+            return embeddings
+        else:
+            embeddings = 16 * nn.functional.normalize(embeddings, p=2, dim=1)  # Scaled length-normalization
+            logits = self.classifier(embeddings)
+            return F.log_softmax(logits, dim=1), embeddings
