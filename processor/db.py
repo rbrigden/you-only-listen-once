@@ -1,7 +1,7 @@
 from peewee import *
 import datetime
 import numpy as np
-
+import pickle as pkl
 _db = None
 
 
@@ -28,11 +28,18 @@ class Embedding(BaseModel):
     user = ForeignKeyField(User, backref='embeddings')
 
 class SpeakerModel(BaseModel):
-    user = ForeignKeyField(Embedding, unique=True)
+    user = ForeignKeyField(User, unique=True)
     coef = BlobField()
     intercept = BlobField()
     n_iter = BlobField()
     threshold = FloatField()
+
+class SpeakerModelSVM(BaseModel):
+    user = ForeignKeyField(User, unique=True)
+    serial_model = BlobField()
+    threshold = FloatField()
+
+
 
 class Audio(BaseModel):
     rec_id = CharField(unique=True)
@@ -71,6 +78,27 @@ def load_speaker_model(user, lr_model):
     return lr_model, sm.threshold
 
 
+
+def write_speaker_model_svm(user, svm_model, threshold):
+    serial_data = pkl.dumps(svm_model)
+    q = SpeakerModelSVM.select().where(SpeakerModelSVM.user == user)
+    if q.exists():
+        q = SpeakerModelSVM.update({SpeakerModelSVM.serial_model: serial_data,
+                                    SpeakerModelSVM.threshold: threshold}).where(SpeakerModelSVM.user == user)
+        q.execute()
+    else:
+        sm = SpeakerModelSVM(user=user,
+                             serial_model=serial_data,
+                             threshold=threshold)
+        sm.save()
+
+
+def load_speaker_model_svm(user):
+    sm = SpeakerModelSVM.get(SpeakerModelSVM.user == user)
+    svm_model = pkl.loads(sm.serial_model)
+    return svm_model, sm.threshold
+
+
 def create_embedding_record(user, embedding, rec_id):
     data = embedding.astype(np.float64).tostring()
     embedding = Embedding(data=data, user=user)
@@ -92,7 +120,7 @@ def clear_all_db_records():
 if __name__ == "__main__":
     db = get_db_conn()
     db.connect()
-    db.create_tables([User, Embedding, Audio, SpeakerModel])
+    db.create_tables([User, Embedding, Audio, SpeakerModel, SpeakerModelSVM])
 
     # Add user
     # User.create(username="Ryan")
