@@ -189,7 +189,12 @@ the mouth and filling the lungs, but there are a series of holes </p>
 		        data: formData})
 		            .done(function(e){
                   var name = e['username'];
-                  location.href="/welcome/"+name;
+                  if(name != "None") {
+                      location.href = "/welcome/" + name;
+                  }
+                  else {
+                      alert("User was not found!");
+                  }
 		            });
           }
 

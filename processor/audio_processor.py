@@ -37,13 +37,15 @@ class AudioProcessor:
             for segment in segments:
                 segment.export("temp.wav", format='wav')
                 with open("temp.wav", 'rb') as f:
-                    source_sample_rate, data = sf.read(f)
+                    data, source_sample_rate = sf.read(f, always_2d=True)
+                    data = data[:, 0]
                 self.logger.info("Source sample rate is {}".format(source_sample_rate))
                 mel = speechpy.feature.lmfe(data, sampling_frequency=source_sample_rate, num_filters=64)
                 mel = mel - np.mean(mel, axis=0, dtype=np.float64)
                 all_mels.append(mel)
         else:
-            source_sample_rate, data = sf.read(audio_stream)
+            data, source_sample_rate = sf.read(audio_stream, always_2d=True)
+            data = data[:, 0]
             self.logger.info("Source sample rate is {}".format(source_sample_rate))
             mel = speechpy.feature.lmfe(data, sampling_frequency=source_sample_rate, num_filters=64)
             mel = mel - np.mean(mel, axis=0, dtype=np.float64)
