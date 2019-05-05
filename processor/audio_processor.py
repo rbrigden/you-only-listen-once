@@ -54,7 +54,8 @@ class AudioProcessor:
 
     def from_file(self, path):
         source_sample_rate, data = wavfile.read(path)
-
+        if len(data.shape) > 1:
+            data = data[:, 0]
         self.logger.info("Source sample rate is {}".format(source_sample_rate))
         mel = speechpy.feature.lmfe(data, sampling_frequency=source_sample_rate, num_filters=64)
         mel = mel - np.mean(mel, axis=0, dtype=np.float64)

@@ -9,9 +9,8 @@ AudioProcessor.sample_rate = 22050
 
 # EMBEDDING PROCESSOR
 SpeakerEmbeddingProcessor.model_cls = @training.speaker_verification.model.IdentifyAndEmbed
-SpeakerEmbeddingProcessor.checkpoint_path = "models/verification/production_baseline.pt"
+SpeakerEmbeddingProcessor.checkpoint_path = "models/verification/baseline_mel.pt"
 training.speaker_verification.model.IdentifyAndEmbed.nspeakers = 1200
-SpeakerEmbeddingInference.stats_path = "data/voxceleb/voxceleb_stats.npy"
 
 # EXTERNAL DATA
 load_voxceleb_embeddings.voxceleb_wav_path = "/home/rbrigden/voxceleb/wav"
