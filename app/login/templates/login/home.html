@@ -11,14 +11,8 @@
 
 
     <link href="{% static 'login/style.css' %}" rel="stylesheet" type="text/css">
-    <link href = "https://bootswatch.com/4/solar/bootstrap.min.css" rel = "stylesheet" type = "text/css">
+    <link href = "https://bootswatch.com/4/minty/bootstrap.min.css" rel = "stylesheet" type = "text/css">
   </head> 
-
-
-
-
-
-
 
   <body id = "registerbod">
 	  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300" type="text/css" />
@@ -40,6 +34,9 @@
               <div class = "col-lg-12">
                 <a href= "#" class = "btn-btn-success" id = "menu-toggle"> 
                   <span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span>
+                  <div id  ="logo_img">
+                    <img src = "https://i.ibb.co/f9kDp9Y/1bd9cbba-6871-40ea-8001-e77bd4f24bfc.png">
+                  </div>
                 </a>
               </div>
             </div>
@@ -49,7 +46,8 @@
               <div class = "col-lg-12">
                 <br>
                 <p id = "instr"> Please say the following phrase after clicking the start button.</p>
-                <p id = "randphrase"> PlaceHolder </p>
+                <p id = "randphrase"> Insects do not breathe as in the higher animals by taking the air into
+the mouth and filling the lungs, but there are a series of holes </p>
                 <br>
                 <br>
                 <br>
@@ -106,6 +104,7 @@
         var audioContext 
         var recordButton = document.getElementById("startrec1");
         recordButton.addEventListener("click", start_stop);
+        var item;
 
 		    var recording = false;
 		    function start_stop() {
@@ -130,7 +129,7 @@
             rec = new Recorder(input,{numChannels:1})
             rec.record()
             var buttons = document.getElementById("startrec1");
-            buttons.style.background = 'url(https://resizeimage.net/mypic/m6DiGxvblxc6TLA9/wFGYX/stop.png) no-repeat';
+            buttons.style.background = 'url(https://i.ibb.co/fSRFf2q/stop-82x82.png) no-repeat';
 
           }).catch(function(err) {
           });
@@ -142,7 +141,7 @@
 
         function stopRecording() {
           var buttons = document.getElementById("startrec1");
-          buttons.style.background = 'url(https://resizeimage.net/mypic/k8ZrFivAU6UI5ATq/RZF7M/start.png) no-repeat';
+          buttons.style.background = 'url(https://i.ibb.co/C5zk8Rk/start-82x82.png) no-repeat';
           rec.stop();
           gumStream.getAudioTracks()[0].stop();
           rec.exportWAV(createDownloadLink);
@@ -179,6 +178,7 @@
           var url = "/login";                                
 		      var formData = new FormData();
 		      formData.append('picture', blob);
+          formData.append('text', item);
 
 		      $.ajax({
 		        url: url, 
@@ -193,11 +193,27 @@
 		            });
           }
 
+
+          var passageOpts = [
+        'Far out in the uncharted backwaters of the unfashionable  end  of the  western  spiral  arm  of  the Galaxy lies a small unregarded yellow sun. Orbiting this at a distance of roughly ninety-two  million  miles is  an  utterly insignificant little blue green planet whose ape- descended life forms are so amazingly primitive that  they still think digital watches are a pretty neat idea.', 
+         'This planet has - or rather had - a problem, which was this: most of  the  people  on  it were unhappy for pretty much of the time. Many solutions were suggested for this problem, but most of these were  largely  concerned with the movements of small green pieces of paper, which is odd because on the whole it wasnt  the  small green pieces of paper that were unhappy.', 
+        'Many were increasingly of the opinion that theyd all made a  big mistake  in  coming  down  from the trees in the first place. And some said that even the trees had been a bad move,  and  that  no one should ever have left the oceans. And then, one Thursday, nearly two thousand years after  one  man had  been nailed to a tree for saying how great it would be to be nice to people for a change, one girl sitting on  her  own  in  a small  cafe  in  Rickmansworth suddenly realized what it was that had been going wrong all this time, and she finally knew how  the world  could  be  made  a  good and happy place.']
+
+        function getText(){
+          console.log('in gettext register')
+          item = passageOpts[Math.floor(Math.random()*passageOpts.length)];
+          console.log(item)
+          document.getElementById("randphrase").innerHTML = item;
+        }
+
+
+/*
         function getText(){
           // read text from URL location
+          
           console.log('in start function')
           var request = new XMLHttpRequest();
-          request.open('GET', 'https://gist.githubusercontent.com/deekayen/4148741/raw/01c6252ccc5b5fb307c1bb899c95989a8a284616/1-1000.txt', true);
+          request.open('GET', 'https://github.com/git/git/blob/master/Documentation/git.txt', false);
           request.send(null);
           request.onreadystatechange = function () {
           	  console.log('in getText')
@@ -222,6 +238,7 @@
               }
             }
         }
+        */
 
         function sleep(ms) {
           return new Promise(resolve => setTimeout(resolve, ms));
