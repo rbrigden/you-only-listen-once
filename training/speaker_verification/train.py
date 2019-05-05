@@ -37,7 +37,7 @@ class VerificationTrainer:
                                     momentum=0.9)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
-        self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[5, 20, 30])
+        self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[10, 20, 30])
 
         if resume:
             self.model.load_state_dict(cpd["model"])

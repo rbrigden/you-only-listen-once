@@ -31,7 +31,7 @@ class VerificationEvaluator:
         return voxceleb.VoxcelebVerification.build(veri_file_path, self.processed_test_root)
 
     def evaluate(self, model, num_workers=8):
-        batch_size = 16
+        batch_size = 10
         enrol_loader = DataLoader(self.enrol_set, shuffle=False, num_workers=num_workers//2, batch_size=batch_size,
                                   collate_fn=voxceleb.voxceleb_veri_collate)
         test_loader = DataLoader(self.test_set, shuffle=False, num_workers=num_workers//2, batch_size=batch_size,

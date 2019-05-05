@@ -14,9 +14,18 @@ class PresenceDetectionProcessor:
         self.logger = logging.getLogger('presenceDetectionProcessor')
         self.threshold = threshold
 
+    def _filter(self, prompt):
+        filtered_text = [c for c in prompt if c in self.speech_rec_model.alphabet._label_to_str]
+        filtered_text = ''.join(filtered_text)
+        filtered_text = " ".join(filtered_text.split())
+        return filtered_text
+
     def forward(self, ground_truth, audio, fs):
         log_probs = self.speech_rec_model.forward(audio, fs, display_chars=False)
         chars = self.speech_rec_model.alphabet._label_to_str + ["-"]
+
+        ground_truth = self._filter(ground_truth.lower())
+
         score = self.presence_model.forward(ground_truth, log_probs, chars)
         self.logger.info("Presence detection of gt {} is {}".format(ground_truth, score))
         return score > self.threshold

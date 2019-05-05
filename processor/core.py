@@ -42,7 +42,7 @@ class YoloProcessor:
                             filemode='a',
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%H:%M:%S',
-                            level=logging.DEBUG)
+                            level=logging.INFO)
 
         logging.info("Yolo Processor")
         self.logger = logging.getLogger('yoloProcessor')
@@ -141,21 +141,25 @@ class YoloProcessor:
         processed_utterance, fs, audio_data = self.audio_processing(audio_bytes)
         embeddings = self.embedding_processor(processed_utterance)
         id_decision = self.speaker_classification.classify_speaker(embeddings.squeeze(0).numpy())
-        presence_decision = self.presence_detection_processor(prompt, audio_data, fs)
+        presence_decision = True # self.presence_detection_processor(prompt, audio_data, fs)
 
         if id_decision is None:
-            user = None
+            username = None
+        elif presence_decision:
+            username = db_core.User.get(db_core.User.id == id_decision).username
         else:
-            user = db_core.User.get(db_core.User.id == id_decision)
+            username = None
+
+        result = {
+            "username": username
+        }
 
         # Send the result to the client
-        self.redis_conn.set("result:{}".format(id_), "Unknown" if user is None else user.username)
-
-        self.logger.log(logging.INFO, "ID Decision is: {}".format("Unknown" if user is None else user.username))
+        self.redis_conn.set("result:{}".format(id_), json.dumps(result))
+        self.logger.log(logging.INFO, "ID Decision is: {}".format(username))
         self.logger.log(logging.INFO, "Presence Decision is: {}".format(presence_decision))
-
-        self.logger.log(logging.INFO, "Authentication complete for request {}".format(id_))
-        return user
+        self.logger.log(logging.INFO, "Authenticated request {}".format(id_))
+        return username
 
 
     def _register(self, request_id, username):

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
+from login.models import Person
 from django.views.decorators.csrf import csrf_exempt
 import asyncio
 from django.contrib import messages
@@ -53,7 +55,8 @@ def hash_blob(blob):
 
 # Create your views here.
 @csrf_exempt
-def events(request):
+def login(request):
+    User.objects.all().delete()
     print('in events')
     print(request.method)
     if request.method == "POST":
@@ -74,12 +77,21 @@ def events(request):
 
         # Wait for the result
         result = _fetch('result:{}'.format(redis_request['id']), conn)
+        result = json.loads(result.decode('utf-8'))
+
+
 
         response = {
             "username": result["username"]
         }
+        print(response)
+        if response['username']:
+            user = User.objects.create_user(response['username'], 'user@gmail.com', 'yolorrn')
+            user.save()
+        else:
+            response['username'] = 'None'
 
-        return HttpResponse(response, content_type='application/json')
+        return HttpResponse(json.dumps(response), content_type='application/json')
 
     print('GET request made')
     return render(request, 'login/home.html', {})
@@ -90,7 +102,10 @@ def loggedIn(request, name):
         #print(name)
         #json_context = '{ "username": "'+ name + '" }'
         #return HttpResponse(json_context, content_type='application/json')
-        return render(request, 'login/welcome.html')
+
+        user = authenticate(username=name, password='yolorrn')
+        if user is not None:
+            return render(request, 'login/welcome.html')
 
 @csrf_exempt
 def error(request):
@@ -98,19 +113,17 @@ def error(request):
 
 
 @csrf_exempt
-def events1(request):
+def register(request):
     if request.method == "POST":
-        # if 'name' in request.POST:
-        #     name = request.POST['name']
-        #     if not Person.objects.filter(username=name).exists():
-        #         person = Person(username=name)
-        #         person.save()
-        #         return render(request, 'login/register.html', {})
-        #     else:
-        #         print("IN ERROR")
-        #         message = 'Username already exists. Try again with valid name!'
-        #         json_error = '{ "error": "'+message+'" }'
-        #         return HttpResponse(json_error, content_type='application/json')
+        if 'name' in request.POST:
+            name = request.POST['name']
+            if not Person.objects.filter(username=name).exists():
+                person = Person(username=name)
+                person.save()
+            else:
+                message = 'Username already exists. Try again with valid name!'
+                json_error = '{ "error": "'+message+'" }'
+                return HttpResponse(json_error, content_type='application/json')
 
         conn = get_redis_conn()
         audio_bytes = request.FILES['picture'].read()

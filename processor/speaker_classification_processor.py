@@ -112,7 +112,7 @@ class SpeakerClassificationProcessor:
         negativeLabels = np.zeros(len(negatives))
         XLab = np.concatenate((positives, negatives), axis=0)
         YLab = np.concatenate((positiveLabels, negativeLabels))
-        f = sklearn.linear_model.LogisticRegression(solver='liblinear', class_weight='balanced').fit(XLab, YLab)
+        f = sklearn.linear_model.LogisticRegression(solver='liblinear', class_weight=None).fit(XLab, YLab)
         return f
 
     def get_eer_inputs(self, model, embeddings_val, pos_embeddings):
@@ -215,7 +215,7 @@ if __name__ == '__main__':
                         filemode='a',
                         format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                         datefmt='%H:%M:%S',
-                        level=logging.DEBUG)
+                        level=logging.INFO)
 
 
     db = db_core.get_db_conn()

@@ -27,7 +27,7 @@ def train_verification(args):
         train_collate_fn = nist.clip_collate(1000, sample=True)
         val_collate_fn = nist.clip_collate(1000, sample=False)
     else:
-        train_set, val_set = voxceleb.VoxcelebID.create_split(args.dset_path, speakers, split=0.8, shuffle=True)
+        train_set, val_set = voxceleb.VoxcelebID.create_split(args.dset_path, speakers, split=0.9, shuffle=True)
         train_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=True)
         val_collate_fn = voxceleb.voxceleb_clip_collate(1000, sample=False)
 
@@ -117,17 +117,17 @@ def train_verification(args):
                 tboard_plot(writer, total_steps, tboard_update)
 
 
-                if (total_steps+1) % args.checkpoint_freq == 0:
-                    veri_eer = trainer.compute_verification_eer(veri_evaluator)
-                    if veri_eer < best_eer:
-                        print("saving checkpoint")
-                        trainer.checkpoint(args.checkpoint_path)
-                        best_eer = veri_eer
-
-                    tboard_update = {
-                        "eer": veri_eer,
-                    }
-                    tboard_plot(writer, e, tboard_update)
+                # if (total_steps+1) % args.checkpoint_freq == 0:
+                #     veri_eer = trainer.compute_verification_eer(veri_evaluator)
+                #     if veri_eer < best_eer:
+                #         print("saving checkpoint")
+                #         trainer.checkpoint(args.checkpoint_path)
+                #         best_eer = veri_eer
+                #
+                #     tboard_update = {
+                #         "eer": veri_eer,
+                #     }
+                #     tboard_plot(writer, e, tboard_update)
 
 
         end = time.time()

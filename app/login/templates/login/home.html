@@ -189,6 +189,7 @@
 		        data: formData})
 		            .done(function(e){
                   var name = e['username'];
+
                   if(name != "None"){
                     console.log("IN IFFFFFF")
                     location.href="/welcome/"+name;
@@ -198,8 +199,7 @@
                     alert("User was not found!");
                     document.getElementById('animation-body').style.display = 'none';
                   }
-
-		            });
+                    });
           }
 
         /*Sentence Generation */
