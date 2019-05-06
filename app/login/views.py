@@ -73,6 +73,7 @@ def login(request):
         }
 
         conn.set('audio:{}'.format(redis_request['id']), audio_bytes)
+        time.sleep(0.1)
         conn.rpush('queue:requests', json.dumps(redis_request, default=myconverter))
 
         # Wait for the result
@@ -80,16 +81,16 @@ def login(request):
         result = json.loads(result.decode('utf-8'))
 
 
-
-        response = {
-            "username": result["username"]
-        }
-        print(response)
-        if response['username']:
-            user = User.objects.create_user(response['username'], 'user@gmail.com', 'yolorrn')
+        print(result)
+        if result['username']:
+            user = User.objects.create_user(result['username'].strip(), 'user@gmail.com', 'yolorrn')
             user.save()
         else:
-            response['username'] = 'None'
+            result['username'] = 'None'
+
+        response = {
+            "username": result["username"].strip()
+        }
 
         return HttpResponse(json.dumps(response), content_type='application/json')
 
@@ -103,7 +104,7 @@ def loggedIn(request, name):
         #json_context = '{ "username": "'+ name + '" }'
         #return HttpResponse(json_context, content_type='application/json')
 
-        user = authenticate(username=name, password='yolorrn')
+        user = authenticate(request, username=name, password='yolorrn')
         if user is not None:
             return render(request, 'login/welcome.html')
 
