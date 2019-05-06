@@ -41,7 +41,7 @@ class SpeakerClassificationProcessor:
         external_embeddings = np.load(BytesIO(external_embeddings))
 
         # Split the external embeddings
-        held_out_prop = int(0.3 * len(external_embeddings))
+        held_out_prop = int(0.2 * len(external_embeddings))
         external_train_idxs = np.arange(len(external_embeddings))
         np.random.shuffle(external_train_idxs)
         external_embeddings_train = external_embeddings[external_train_idxs[held_out_prop:]]

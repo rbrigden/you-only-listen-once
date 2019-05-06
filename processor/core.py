@@ -168,7 +168,7 @@ class YoloProcessor:
         user.save()
 
         audio_bytes = self.redis_conn.get('audio:{}'.format(request_id))
-        processed_utterances, _, _ = self.audio_processing(audio_bytes, split=4)
+        processed_utterances, _, _ = self.audio_processing(audio_bytes, split=6)
         embeddings = self.embedding_processor(processed_utterances)
         embeddings = embeddings.numpy()
 
