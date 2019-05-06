@@ -14,10 +14,11 @@ import gin
 @gin.configurable
 class SpeakerClassificationProcessor:
 
-    def __init__(self, mode='lr'):
+    def __init__(self, mode='lr', decision_mode=False, fixed_thresh=None):
         self.mode = mode
-
+        self.decision_mode = decision_mode
         self.redis_conn = redis.Redis()
+        self.fixed_thresh = fixed_thresh
         self.logger = logging.getLogger('SpeakerClassificationProcessor')
 
 
@@ -40,7 +41,7 @@ class SpeakerClassificationProcessor:
         external_embeddings = np.load(BytesIO(external_embeddings))
 
         # Split the external embeddings
-        held_out_prop = int(0.2 * len(external_embeddings))
+        held_out_prop = int(0.3 * len(external_embeddings))
         external_train_idxs = np.arange(len(external_embeddings))
         np.random.shuffle(external_train_idxs)
         external_embeddings_train = external_embeddings[external_train_idxs[held_out_prop:]]
@@ -111,11 +112,21 @@ class SpeakerClassificationProcessor:
 
         user_ids = [user.id for user in users]
 
-        targets = self.get_target(user_ids, speaker_models, thresholds, embedding)
-        if len(targets) == 0:
-            return None
+        targets, decisions = self.get_target(user_ids, speaker_models, thresholds, embedding)
+        labels, raw_decisions = zip(*decisions)
 
-        return max(targets, key=lambda x: x[1])[0]
+
+        if self.decision_mode and self.mode == 'svm':
+            if sum(raw_decisions) > 1:
+                decision = max(targets, key=lambda x: x[1])[0]
+            elif sum(raw_decisions) == 1:
+                decision = max(decisions, key=lambda item: item[1])[0]
+            else:
+                decision = None
+        else:
+            decision = None if len(targets) == 0 else max(targets, key=lambda x: x[1])[0]
+
+        return decision
 
         # bestlabel = self.get_argmax_target(targets)
         # return bestlabel
@@ -145,7 +156,7 @@ class SpeakerClassificationProcessor:
         negativeLabels = np.zeros(len(negatives))
         XLab = np.concatenate((positives, negatives), axis=0)
         YLab = np.concatenate((positiveLabels, negativeLabels))
-        f = sklearn.svm.SVC(gamma='scale', probability=True, class_weight='balanced').fit(XLab, YLab)
+        f = sklearn.svm.SVC(gamma='scale', probability=True).fit(XLab, YLab)
         return f
 
 
@@ -174,12 +185,20 @@ class SpeakerClassificationProcessor:
          :return targets: List of possible target labels for a particular embedding
          """
         targets = []
+        decisions = []
         for label, model, threshold in zip(user_ids, speaker_models, thresholds):
             prob = model.predict_proba([embedding])[0][1]
             self.logger.info("P({}) {}".format(db_core.User.get(db_core.User.id == label).username, prob))
-            if prob > threshold:
-                targets.append((label, prob))
-        return targets
+            if self.mode == 'lr':
+                threshold = self.fixed_thresh if self.fixed_thresh else threshold
+                if prob > threshold:
+                    targets.append((label, prob))
+            elif self.mode == 'svm':
+                decision = model.predict([embedding])[0]
+                decisions.append((label, decision))
+                if self.fixed_thresh and prob > self.fixed_thresh:
+                    targets.append((label, prob))
+        return targets, decisions
 
 
     def get_argmax_target(self, targets):

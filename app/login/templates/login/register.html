@@ -82,7 +82,10 @@
                 <br>
                 <p id = "instr"> Please say the following phrase after entering your name and then clicking the start button.</p>
                 <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"  disabled/>
-                <p id = "randphraseReg"> PlaceHolder </p>
+                <p id = "randphraseReg1"> PlaceHolder </p>
+                <p id = "randphraseReg2"> PlaceHolder </p>
+                <p id = "randphraseReg3"> PlaceHolder </p>
+
                 <br>
                 <br>
                 <br>
@@ -171,9 +174,10 @@
 
         function getText(){
           console.log('in gettext register')
-          var item = passageOpts[Math.floor(Math.random()*passageOpts.length)];
-          console.log(item)
-          document.getElementById("randphraseReg").innerHTML = item;
+          var i;
+          for (i = 0; i < passageOpts.length; i++) {
+            document.getElementById("randphraseReg" + (i + 1).toString()).innerHTML = passageOpts[i];
+          }
         }
 
         var recording = false;

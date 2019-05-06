@@ -14,7 +14,7 @@ training.speaker_verification.model.IdentifyAndEmbed.nspeakers = 1200
 
 # EXTERNAL DATA
 load_voxceleb_embeddings.voxceleb_wav_path = "/home/rbrigden/voxceleb/wav"
-YoloProcessor.load_external = True
+YoloProcessor.load_external = False
 load_voxceleb_embeddings.n = 50
 
 # PRESENCE DETECTION PROCESSOR
@@ -22,9 +22,13 @@ PresenceDetectionProcessor.threshold = -500
 
 # CLASSIFICATION PROCESSOR
 SpeakerClassificationProcessor.mode = 'svm'
+SpeakerClassificationProcessor.decision_mode = False
+SpeakerClassificationProcessor.fixed_thresh = 0.5
+
+
 sklearn.linear_model.LogisticRegression.solver = 'liblinear'
 sklearn.linear_model.LogisticRegression.penalty = 'l2'
 sklearn.linear_model.LogisticRegression.class_weight = 'balanced'
 
 # DEMO
-YoloProcessor.load_fixtures = True
+YoloProcessor.load_fixtures = False

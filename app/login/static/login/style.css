@@ -89,7 +89,15 @@ li{
     text-align: right;
 }
 
-#randphraseReg {
+#randphraseReg1 {
+    font-size: 25pt;
+}
+
+#randphraseReg2 {
+    font-size: 25pt;
+}
+
+#randphraseReg3 {
     font-size: 25pt;
 }
 
