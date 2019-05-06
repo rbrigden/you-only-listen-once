@@ -18,6 +18,8 @@
 
 
   <body id = "registerbod">
+
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300" type="text/css" />
       <div id = "wrapper">
 
@@ -45,11 +47,41 @@
             </div>
             <br>
             <br>
+            
+            <div class = "row">
+             <!-- Trigger/Open The Modal -->
+              <div class = "col-lg-2">
+                <button type="button" class="btn btn-primary" id="myBtn">Enter Activation Code</button>
+              </div>
+
+              <!-- The Modal -->
+              <div id="myModal" class="modal">
+
+                <!-- Modal content -->
+                <div class="modal-content">
+                  <span class="close">&times;</span>
+                  <div class = "row" id = "codebox">
+                    <div class = "col-md-12">
+                      <input type = "text" class="form-control" id = "code" placeHolder = "Enter Text"/>
+                    </div>
+                  </div>
+                  <br>
+                  <div class = "row" id = "codebox">
+                    <div class = "col-md-12">
+                      <button id = "subCode" class="btn btn-primary" onclick="verifyCode()"> Submit </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div> 
+            </div>
+            <br>
+            <br>
             <div class = "row" id = "body-main-content">
               <div class = "col-lg-12">
                 <br>
                 <p id = "instr"> Please say the following phrase after entering your name and then clicking the start button.</p>
-                <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"/>
+                <input type = "text" id = "nameInp" name = "userName" placeHolder = "Enter name"  disabled/>
                 <p id = "randphraseReg"> PlaceHolder </p>
                 <br>
                 <br>
@@ -73,6 +105,38 @@
 
 
       <script> 
+
+      // Get the modal
+      var modal = document.getElementById('myModal');
+
+      // Get the button that opens the modal
+      var btn = document.getElementById("myBtn");
+
+      // Get the <span> element that closes the modal
+      var span = document.getElementsByClassName("close")[0];
+
+      // When the user clicks on the button, open the modal
+      btn.onclick = function() {
+        modal.style.display = "block";
+      }
+
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function() {
+        modal.style.display = "none";
+      }
+
+      function verifyCode(){
+        code = document.getElementById('code').value;
+        document.getElementById('code').value = "";
+        if(code == "19971997"){
+          document.getElementById('nameInp').disabled = false;
+          alert("Registration has been activated");
+          modal.style.display = "none";
+        }
+        else{
+          alert("Incorrect code entered. Registration not activated!");
+        }
+      }
 
       /* menu toggle */
 
