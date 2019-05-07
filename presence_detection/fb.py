@@ -48,6 +48,46 @@ class PresenceScore:
         return self._sum_paths_blank(trellis).item()
 
 
+# Python program to print
+# colored text and background
+class colors:
+
+    reset='\033[0m'
+    bold='\033[01m'
+    disable='\033[02m'
+    underline='\033[04m'
+    reverse='\033[07m'
+    strikethrough='\033[09m'
+    invisible='\033[08m'
+    class fg:
+        black='\033[30m'
+        red='\033[31m'
+        green='\033[32m'
+        orange='\033[33m'
+        blue='\033[34m'
+        purple='\033[35m'
+        cyan='\033[36m'
+        lightgrey='\033[37m'
+        darkgrey='\033[90m'
+        lightred='\033[91m'
+        lightgreen='\033[92m'
+        yellow='\033[93m'
+        lightblue='\033[94m'
+        pink='\033[95m'
+        lightcyan='\033[96m'
+    class bg:
+        black='\033[40m'
+        red='\033[41m'
+        green='\033[42m'
+        orange='\033[43m'
+        blue='\033[44m'
+        purple='\033[45m'
+        cyan='\033[46m'
+        lightgrey='\033[47m'
+
+
+
+
 if __name__ == '__main__':
     from presence_detection.speech_rec import SpeechRec
 
@@ -78,13 +118,29 @@ if __name__ == '__main__':
         "hello its blocked fairs worse glam little food off a grain doesnt pond list poorly as it came in bad wild",
         "hello its blocked fairs worse glam little food off a grain doesnt pond list poorly as she came in bad wild",
         "hello its blocked fairs worse glam little food off a grain doesnt pond list poorly as she came can bad wild",
-        "hello its blocked fairs worse glam",
-
     ]
 
-    log_probs = sr.forward(audio, fs, display_chars=True)
+    log_probs = sr.forward(audio, fs)
+
     chars = sr.alphabet._label_to_str + ["-"]
     pscore = PresenceScore()
     for i, seq in enumerate(seqs):
-        print(seq)
-        print(pscore.forward(seq, log_probs, chars))
+        print("Diff = {}".format(i))
+
+        if i == 0:
+            print(seq)
+        else:
+
+            didx = [x != y for x, y in zip(seq.split(" "), seqs[i-1].split())].index(True)
+            disp_seq = []
+            for idx, w in enumerate(seq.split(" ")):
+                if didx == idx:
+                    disp_seq.append("{}{}{}".format(colors.fg.red, w, colors.reset))
+                else:
+                    disp_seq.append(w)
+            disp_seq = " ".join(disp_seq)
+
+            print("{}".format(disp_seq))
+        print("LogProb: {}".format(pscore.forward(seq, log_probs, chars)))
+        print("\n")
+
