@@ -1,14 +1,39 @@
-# capstone
-ECE Capstone Project
+# You Only Listen Once
 
-## data/
 
-This is where all of the data processing code will be located. Please note that you should *not* be writing any data to this directory. This is just so that we can standardize the data processing code across our experiments, instead of having each person write their own processing code.
+ECE Capstone Project @ Carnegie Mellon
 
-## training/
+Authors: Ryan Brigden, Nikhil Rangarajan, and Richa Ravi
 
-This is where we will put all code related to training speaker embedding models. In training/baseline there is an implementation for a basic speaker embedding model that relies on already processed NIST-SRE data. I have included the processing scripts for this data in data/nist/old. The scripts are good resources to see how VAD and EER can be implemented. Unfortunately we can't rely on this old dataset because we don't know how it was processed. So we can use it for now to test out some baselines but we won't ever be training our final models on it.
+The YOLO system is a practical speech login system that securely authenticates users via a web application. The system scales to many users and requires few speech samples for registration and only one speech sample at login. To prevent an impersonation attack, an impostor detection model based on speech recognition is used. There are a number of pressing use cases for such technology, such as
 
-## inference/
+1. Transaction Authentication
+2. Password Reset via Voice
+3. Voice Controlled Locks (eg. opening a door or unlocking a car)
+4. Access Control for Computers
+5. Information Retrieval
 
-This is where all of the code for our real-time speaker ID will go. We probably won't touch this until we have a working speaker embedding model with an acceptable EER.
+Our system is tested on held-out data to guarantee high precision during identification and presence detection in order to ensure security.
+
+
+## System Diagram
+
+![](assets/image1.png)
+
+## Speech Processing
+
+![](assets/image2.png)
+
+## Speaker Verification
+
+![](assets/image5.png)
+
+## Speaker Identification
+
+![](assets/image6.png)
+
+## Presence Detection
+
+![](assets/image7.png)
+
+![](assets/image3.png)
