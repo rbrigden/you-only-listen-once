@@ -1,10 +1,6 @@
 # You Only Listen Once
 
 
-ECE Capstone Project @ Carnegie Mellon
-
-Authors: Ryan Brigden, Nikhil Rangarajan, and Richa Ravi
-
 The YOLO system is a practical speech login system that securely authenticates users via a web application. The system scales to many users and requires few speech samples for registration and only one speech sample at login. To prevent an impersonation attack, an impostor detection model based on speech recognition is used. There are a number of pressing use cases for such technology, such as
 
 1. Transaction Authentication
@@ -37,3 +33,8 @@ Our system is tested on held-out data to guarantee high precision during identif
 ![](assets/image7.png)
 
 ![](assets/image3.png)
+
+
+ECE Capstone Project @ Carnegie Mellon
+
+Authors: Ryan Brigden, Nikhil Rangarajan, and Richa Ravi
